@@ -75,14 +75,20 @@ exports.getEmbedding = functions.https.onRequest((req, res) => {
 exports.upsertEmbedding = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const { title, answer, id } = req.body;
-            const text = `${title}\n\n${answer}`;
+            const items = req.body;
+            
+            if (!Array.isArray(items)) {
+                throw new Error('Request body must be an array of items');
+            }
 
-            // Step 1: Make a POST request to OpenAI embeddings endpoint
+            // Step 1: Prepare all texts for embedding
+            const texts = items.map(item => `${item.title}\n\n${item.answer}`);
+
+            // Step 2: Get embeddings for all texts in one request
             const response = await axios.post(
                 'https://api.openai.com/v1/embeddings',
                 {
-                    input: text,
+                    input: texts,
                     model: 'text-embedding-3-small'
                 },
                 {
@@ -93,55 +99,46 @@ exports.upsertEmbedding = functions.https.onRequest((req, res) => {
                 }
             );
 
-            
-            const embedding = response.data.data[0].embedding;
+            // Step 3: Prepare vectors for Pinecone
+            const vectors = response.data.data.map((embedding, index) => ({
+                id: items[index].id,
+                values: Array.from(embedding.embedding),
+                metadata: {
+                    title: items[index].title,
+                    answer: items[index].answer
+                }
+            }));
 
-
-            // Step 2: upsert the embedding to pinecone
-            const size = 1536;
-            const vectors = [];
-            vectors.push({ id: id, values: Array.from(embedding), metadata: { title, answer }})
-            
+            // Step 4: Initialize Pinecone index
             await pc.createIndex({
                 name: 'interview-me',
-                dimension: size,
+                dimension: 1536,
                 metric: 'cosine',
                 spec: {
-                  serverless: {
-                    cloud: 'aws',
-                    region: 'us-east-1',
-                  },
+                    serverless: {
+                        cloud: 'aws',
+                        region: 'us-east-1',
+                    },
                 },
                 suppressConflicts: true,
                 waitUntilReady: true,
             });
             const index = pc.Index('interview-me');
-        
-            // Upsert vectors to Pinecone index
+
+            // Step 5: Upsert all vectors at once
             await index.upsert(vectors);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            res.status(200).send({ embedding });
+            res.status(200).send({ 
+                message: 'Successfully processed embeddings',
+                count: vectors.length 
+            });
 
         } catch (error) {
-            console.error('Error fetching embeddings from OpenAI:', error.response?.data || error.message);
-            res.status(500).send('Error fetching embeddings from OpenAI');
+            console.error('Error processing embeddings:', error.response?.data || error.message);
+            res.status(500).send({
+                error: 'Error processing embeddings',
+                details: error.response?.data || error.message
+            });
         }
     });
 });

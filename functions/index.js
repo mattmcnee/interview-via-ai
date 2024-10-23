@@ -13,32 +13,32 @@ const openaiApiKey = functions.config().openai.api_key;
 // Initialize CORS middleware
 const corsHandler = cors({ origin: true });
 
-exports.textCompletionOpenAi = functions.https.onRequest((req, res) => {
-    corsHandler(req, res, async () => {
-        try {
-            const { prompt } = req.body; // Assume you're sending a prompt in the request body
+// exports.textCompletionOpenAi = functions.https.onRequest((req, res) => {
+//     corsHandler(req, res, async () => {
+//         try {
+//             const { prompt } = req.body; // Assume you're sending a prompt in the request body
 
-            // Initialize OpenAI client with the API key
-            const openai = new OpenAI({
-                apiKey: openaiApiKey, // Use the API key from Firebase config
-            });
+//             // Initialize OpenAI client with the API key
+//             const openai = new OpenAI({
+//                 apiKey: openaiApiKey, // Use the API key from Firebase config
+//             });
 
-            // Create a completion using the OpenAI API
-            const completion = await openai.chat.completions.create({
-                model: "gpt-4", // Use the correct model name
-                messages: [
-                    { "role": "user", "content": prompt } // Use the prompt from the request
-                ]
-            });
+//             // Create a completion using the OpenAI API
+//             const completion = await openai.chat.completions.create({
+//                 model: "gpt-4", // Use the correct model name
+//                 messages: [
+//                     { "role": "user", "content": prompt } // Use the prompt from the request
+//                 ]
+//             });
 
-            // Send the response back to the client
-            res.status(200).send(completion);
-        } catch (error) {
-            console.error('Error calling OpenAI API:', error);
-            res.status(500).send('Error calling OpenAI API');
-        }
-    });
-});
+//             // Send the response back to the client
+//             res.status(200).send(completion);
+//         } catch (error) {
+//             console.error('Error calling OpenAI API:', error);
+//             res.status(500).send('Error calling OpenAI API');
+//         }
+//     });
+// });
 
 
 exports.getEmbedding = functions.https.onRequest((req, res) => {
@@ -187,11 +187,11 @@ exports.getSimilarDocuments = functions.https.onRequest((req, res) => {
         });
 
         const ragResponse = await openai.chat.completions.create({
-            model: "gpt-4",
+            model: "gpt-4o-mini",
             messages: [
               {
                 role: "system",
-                content: "You are roleplaying as a candidate in a job interview and are tasked with answering questions. The provided context contains answers given by the candidate you are roleplaying as. Only use the information provided in the context to answer questions. You may say that you don't know or can't recall if no relevant context is available."
+                content: `You are roleplaying as a candidate in a job interview and are tasked with answering questions. The provided context contains answers given by the candidate you are roleplaying as. Only use the information provided in the context to answer questions. If no relevant context is available, apologise, say you "don't know" or "can't recall" and ask if the interviewer has any other questions. Do not break character or refer to "the context".`
               },
               {
                 role: "user",

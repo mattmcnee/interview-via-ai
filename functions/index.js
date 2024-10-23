@@ -82,7 +82,7 @@ exports.upsertEmbedding = functions.https.onRequest((req, res) => {
             }
 
             // Step 1: Prepare all texts for embedding
-            const texts = items.map(item => `${item.title}\n\n${item.answer}`);
+            const texts = items.map(item => `${item.title}\n${item.answer}`);
 
             // Step 2: Get embeddings for all texts in one request
             const response = await axios.post(
@@ -140,5 +140,76 @@ exports.upsertEmbedding = functions.https.onRequest((req, res) => {
                 details: error.response?.data || error.message
             });
         }
+    });
+});
+
+exports.getSimilarDocuments = functions.https.onRequest((req, res) => {
+    corsHandler(req, res, async () => {
+      try {
+
+        // Step 1: Encode the text as a vector using OpenAI API
+
+        const { topK, text } = req.body;
+        const response = await axios.post(
+            'https://api.openai.com/v1/embeddings',
+            {
+                input: text,
+                model: 'text-embedding-3-small'
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${openaiApiKey}`
+                }
+            }
+        );
+
+        const vector = response.data.data[0].embedding;
+
+        // Step 2: Query the Pinecone index for similar documents
+
+        const index = pc.index('interview-me');
+        const answer = await index.query({ topK: topK, vector: vector, includeMetadata: true });
+
+        // const related = answer.matches.map(match => ({
+        //     title: match.metadata.title,
+        //     answer: match.metadata.answer
+        // }));
+
+        // Step 3: Obtain Retrieval Augmented Generation (RAG) response using OpenAI API
+
+        const related = answer.matches.map(match => 
+            `Question: ${match.metadata.title}\nAnswer: ${match.metadata.answer}`
+        ).join('\n\n');
+
+        const openai = new OpenAI({
+            apiKey: openaiApiKey,
+        });
+
+        const ragResponse = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+              {
+                role: "system",
+                content: "You are roleplaying as a candidate in a job interview and are tasked with answering questions. The provided context contains answers given by the candidate you are roleplaying as. Only use the information provided in the context to answer questions. You may say that you don't know or can't recall if no relevant context is available."
+              },
+              {
+                role: "user",
+                content: `Context:\n${related}\n\nQuestion: ${text}`
+              }
+            ],
+            temperature: 0.3,
+            max_tokens: 500
+          });
+
+        const ragMessage = ragResponse.choices[0].message.content;
+
+
+  
+        res.status(200).json({ success: true, message: ragMessage });
+      } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
     });
 });

@@ -1,23 +1,102 @@
 [
-    {
-      "question": "Can you tell me about yourself?",
-      "answer": "I have over three years of experience in full-stack web development, specializing in React, Firebase, and map-based applications."
-    },
-    {
-      "question": "What are your strengths?",
-      "answer": "My strengths include problem-solving, attention to detail, and the ability to quickly adapt to new technologies."
-    },
-    {
-      "question": "Why do you want to work here?",
-      "answer": "I admire your focus on innovative web solutions, and I believe my skills in frontend and backend development align with your team's needs."
-    },
-    {
-      "question": "Can you describe a challenging project you worked on?",
-      "answer": "I developed a complex route-planning system with Mapbox and Firebase, optimizing performance for a large dataset of geographical points."
-    },
-    {
-      "question": "Where do you see yourself in five years?",
-      "answer": "I see myself growing into a leadership role, mentoring junior developers and contributing to strategic project decisions."
-    }
-  ]
-  
+  {
+    "id": "1",
+    "title": "Tell me about yourself.",
+    "answer": "I am a web developer with over three years of experience in building responsive and user-friendly applications. I have a strong background in JavaScript, React, and Firebase, which I have used to create several full-stack projects."
+  },
+  {
+    "id": "2",
+    "title": "What are your strengths?",
+    "answer": "One of my key strengths is my problem-solving ability. I enjoy tackling complex challenges and finding efficient solutions. I am also a quick learner, which helps me adapt to new technologies and frameworks."
+  },
+  {
+    "id": "3",
+    "title": "What are your weaknesses?",
+    "answer": "I tend to be a perfectionist, which sometimes leads me to spend more time on a task than necessary. However, I've learned to balance quality with efficiency by setting time limits for my work."
+  },
+  {
+    "id": "4",
+    "title": "Why do you want to work here?",
+    "answer": "I admire your company's commitment to innovation and quality. I believe my skills in web development align with your team's goals, and I am excited about the opportunity to contribute to projects that have a meaningful impact."
+  },
+  {
+    "id": "5",
+    "title": "Describe a challenging project you worked on.",
+    "answer": "I worked on a project that required integrating multiple APIs for real-time data. The biggest challenge was ensuring data consistency across different sources. I overcame this by implementing a robust caching strategy and thorough testing."
+  },
+  {
+    "id": "6",
+    "title": "How do you prioritize your tasks?",
+    "answer": "I prioritize tasks based on their deadlines and the impact they have on the project. I use tools like Trello to organize my workload and ensure I focus on high-priority items first."
+  },
+  {
+    "id": "7",
+    "title": "How do you handle feedback?",
+    "answer": "I view feedback as an opportunity for growth. I actively seek constructive criticism from peers and supervisors, and I use it to improve my work and enhance my skills."
+  },
+  {
+    "id": "8",
+    "title": "What technologies are you most comfortable with?",
+    "answer": "I am most comfortable with JavaScript, React, and Firebase for front-end development. For back-end, I have experience with Node.js and Express, along with databases like Firestore."
+  },
+  {
+    "id": "9",
+    "title": "How do you stay updated with industry trends?",
+    "answer": "I regularly read industry blogs, follow influential developers on social media, and participate in online communities like Stack Overflow. I also attend webinars and local meetups whenever possible."
+  },
+  {
+    "id": "10",
+    "title": "Describe your experience with version control systems.",
+    "answer": "I have extensive experience using Git for version control. I regularly use branching strategies for features and bug fixes, and I am comfortable with collaborative workflows on platforms like GitHub."
+  },
+  {
+    "id": "11",
+    "title": "Can you describe a time when you had to learn a new technology quickly?",
+    "answer": "When my team decided to switch to a new JavaScript framework, I took the initiative to learn it by completing online courses and building a small project. This helped me contribute effectively to the team."
+  },
+  {
+    "id": "12",
+    "title": "How do you approach debugging?",
+    "answer": "I approach debugging methodically by reproducing the issue, analyzing error messages, and using tools like console logging and debugging software to trace the source of the problem."
+  },
+  {
+    "id": "13",
+    "title": "What is your experience with responsive design?",
+    "answer": "I have designed and implemented responsive layouts using CSS media queries and frameworks like Bootstrap. I ensure that applications are mobile-friendly and provide a consistent user experience across devices."
+  },
+  {
+    "id": "14",
+    "title": "How do you ensure code quality?",
+    "answer": "I prioritize code quality by writing clean, maintainable code, using linters, and adhering to coding standards. I also participate in code reviews and write unit tests to validate functionality."
+  },
+  {
+    "id": "15",
+    "title": "What is your experience with Agile methodologies?",
+    "answer": "I have worked in Agile environments where we followed Scrum practices. I participated in daily stand-ups, sprint planning, and retrospectives, which helped improve team collaboration and project delivery."
+  },
+  {
+    "id": "16",
+    "title": "How do you handle tight deadlines?",
+    "answer": "I handle tight deadlines by breaking tasks into manageable chunks and focusing on the most critical features first. I also communicate proactively with my team to ensure we are aligned on priorities."
+  },
+  {
+    "id": "17",
+    "title": "What are your career goals?",
+    "answer": "My career goals include continuing to develop my technical skills, taking on more leadership responsibilities, and ultimately contributing to projects that have a positive social impact."
+  },
+  {
+    "id": "18",
+    "title": "Can you explain a technical concept to a non-technical person?",
+    "answer": "Absolutely. For example, I can explain APIs as being similar to a restaurant menu. The menu provides a list of dishes you can order, and when you request a dish, the kitchen prepares it for you without you needing to know how to cook it."
+  },
+  {
+    "id": "19",
+    "title": "How do you approach teamwork?",
+    "answer": "I approach teamwork with an open mind and a collaborative spirit. I value each team member's input and strive to create an inclusive environment where everyone feels comfortable sharing their ideas."
+  },
+  {
+    "id": "20",
+    "title": "What is your greatest professional achievement?",
+    "answer": "My greatest professional achievement was leading a project that increased our application's user engagement by 30% through implementing new features based on user feedback. It was rewarding to see our efforts directly impact users."
+  }
+]

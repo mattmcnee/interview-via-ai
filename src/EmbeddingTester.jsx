@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import template from './assets/template.json';
 
 const EmbeddingTester = () => {
   const [inputText, setInputText] = useState('');
@@ -25,16 +26,12 @@ const EmbeddingTester = () => {
 
     const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/upsertEmbedding`,
-        [{
-          title: "What is your greatest strength?",
-          answer: inputText,
-          id: "1"
-        }],
+            template,
         { headers: { 'Content-Type': 'application/json' } }
       );
       
 
-      setEmbeddings(response.data.embedding);
+      setEmbeddings(response);
       console.log(response.data.embedding);
     } catch (error) {
       console.error('Error fetching embeddings:', error);

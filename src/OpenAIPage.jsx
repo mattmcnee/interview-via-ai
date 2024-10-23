@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+import SimilarDocumentsButton from './SimilarDocumentsButton';
+
 const OpenAIPage = () => {
     const [prompt, setPrompt] = useState('');
     const [response, setResponse] = useState('');
@@ -28,7 +30,7 @@ const OpenAIPage = () => {
     return (
         <div>
             <h1>OpenAI API Interaction</h1>
-            <form onSubmit={handleSubmit}>
+            {/* <form onSubmit={handleSubmit}>
                 <textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
@@ -48,7 +50,8 @@ const OpenAIPage = () => {
                     <h2>Response:</h2>
                     <p>{response}</p>
                 </div>
-            )}
+            )} */}
+            <SimilarDocumentsButton/>
         </div>
     );
 };

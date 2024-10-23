@@ -27,7 +27,8 @@ const EmbeddingTester = () => {
         `${import.meta.env.VITE_API_URL}/upsertEmbedding`,
         {
           title: "What is your greatest strength?",
-          answer: inputText
+          answer: inputText,
+          id: "1"
         },
         { headers: { 'Content-Type': 'application/json' } }
       );

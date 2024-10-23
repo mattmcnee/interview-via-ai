@@ -75,7 +75,7 @@ exports.getEmbedding = functions.https.onRequest((req, res) => {
 exports.upsertEmbedding = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const { title, answer } = req.body;
+            const { title, answer, id } = req.body;
             const text = `${title}\n\n${answer}`;
 
             // Step 1: Make a POST request to OpenAI embeddings endpoint
@@ -93,10 +93,52 @@ exports.upsertEmbedding = functions.https.onRequest((req, res) => {
                 }
             );
 
+            
             const embedding = response.data.data[0].embedding;
 
-            // Step 2: Send the embedding back to the client
+
+            // Step 2: upsert the embedding to pinecone
+            const size = 1536;
+            const vectors = [];
+            vectors.push({ id: id, values: Array.from(embedding), metadata: { title, answer }})
+            
+            await pc.createIndex({
+                name: 'interview-me',
+                dimension: size,
+                metric: 'cosine',
+                spec: {
+                  serverless: {
+                    cloud: 'aws',
+                    region: 'us-east-1',
+                  },
+                },
+                suppressConflicts: true,
+                waitUntilReady: true,
+            });
+            const index = pc.Index('interview-me');
+        
+            // Upsert vectors to Pinecone index
+            await index.upsert(vectors);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             res.status(200).send({ embedding });
+
         } catch (error) {
             console.error('Error fetching embeddings from OpenAI:', error.response?.data || error.message);
             res.status(500).send('Error fetching embeddings from OpenAI');

@@ -1,0 +1,23 @@
+[
+    {
+      "question": "Can you tell me about yourself?",
+      "answer": "I have over three years of experience in full-stack web development, specializing in React, Firebase, and map-based applications."
+    },
+    {
+      "question": "What are your strengths?",
+      "answer": "My strengths include problem-solving, attention to detail, and the ability to quickly adapt to new technologies."
+    },
+    {
+      "question": "Why do you want to work here?",
+      "answer": "I admire your focus on innovative web solutions, and I believe my skills in frontend and backend development align with your team's needs."
+    },
+    {
+      "question": "Can you describe a challenging project you worked on?",
+      "answer": "I developed a complex route-planning system with Mapbox and Firebase, optimizing performance for a large dataset of geographical points."
+    },
+    {
+      "question": "Where do you see yourself in five years?",
+      "answer": "I see myself growing into a leadership role, mentoring junior developers and contributing to strategic project decisions."
+    }
+  ]
+  

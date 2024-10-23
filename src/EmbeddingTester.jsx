@@ -24,6 +24,7 @@ const EmbeddingTester = () => {
       );
 
       setEmbeddings(response.data.embedding);
+      console.log(response.data.embedding);
     } catch (error) {
       console.error('Error fetching embeddings:', error);
       setError('Failed to fetch embeddings. Please try again.');

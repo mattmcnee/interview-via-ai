@@ -17,11 +17,21 @@ const EmbeddingTester = () => {
     setError(null);
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/getEmbedding`,
-        { inputText },
+    //   const response = await axios.post(
+    //     `${import.meta.env.VITE_API_URL}/getEmbedding`,
+    //     { inputText },
+    //     { headers: { 'Content-Type': 'application/json' } }
+    //   );
+
+    const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/upsertEmbedding`,
+        {
+          title: "What is your greatest strength?",
+          answer: inputText
+        },
         { headers: { 'Content-Type': 'application/json' } }
       );
+      
 
       setEmbeddings(response.data.embedding);
       console.log(response.data.embedding);

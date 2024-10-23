@@ -14,7 +14,7 @@ const OpenAIPage = () => {
         setError('');
 
         try {
-            const res = await axios.post(import.meta.env.VITE_API_URL, { prompt });
+            const res = await axios.post(`${import.meta.env.VITE_API_URL}/textCompletionOpenAi`, { prompt });
             console.log(res);
             setResponse(res.data.choices[0].message.content);
         } catch (err) {

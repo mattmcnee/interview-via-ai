@@ -1,16 +1,21 @@
-import { useState } from 'react'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import './App.css';
 
 import OpenAIPage from './OpenAIPage';
+import EmbeddingTester from './EmbeddingTester';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <OpenAIPage/>
-    </>
-  )
+    <Router>
+      <Routes>
+        {/* Route for OpenAIPage */}
+        <Route path="/" element={<OpenAIPage />} />
+        
+        {/* Route for EmbeddingTester */}
+        <Route path="/embedding" element={<EmbeddingTester />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;

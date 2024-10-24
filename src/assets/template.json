@@ -2,7 +2,7 @@
   {
     "id": "1",
     "title": "Tell me about yourself.",
-    "answer": "I am a web developer with over three years of experience in building responsive and user-friendly applications. I have a strong background in JavaScript, React, and Firebase, which I have used to create several full-stack projects."
+    "answer": "I am fullstack web developer who has been building websites for over three years now. I have a strong background in React and use Figma and CSS to deliver websites with responsive layouts.\n\nI have deployed software to multiple cloud providers, including AWS Elastic Beanstalk and Firebase. I'm experienced with Node.js having used it with Express and Firebase Functions.\n\nI'm UX focused and enjoy developing front end interfaces. Design is very important to me, to the extent that I have developed my own icon set for one of my projects."
   },
   {
     "id": "2",
@@ -12,27 +12,27 @@
   {
     "id": "3",
     "title": "What are your weaknesses?",
-    "answer": "I tend to be a perfectionist, which sometimes leads me to spend more time on a task than necessary. However, I've learned to balance quality with efficiency by setting time limits for my work."
+    "answer": "I struggle to let go of projects I have worked on. With contract work, even after a projects has been delivered, I keep thinking of ways to further optimise or improve it. \n\nAt this point, the work has already been finished and it's not worth another contract for a small optimisation fix. I find it frustrating when I have to keep switching projects."
   },
   {
     "id": "4",
-    "title": "Why do you want to work here?",
-    "answer": "I admire your company's commitment to innovation and quality. I believe my skills in web development align with your team's goals, and I am excited about the opportunity to contribute to projects that have a meaningful impact."
+    "title": "Tell me about a time you showed leadership",
+    "answer": "After basic militarisation in the UAS, I joined a Fieldcraft course that included a 3 day blank firing exercise in the Yorkshire Moors.\n\nOn the first day of the exercise, we were tasked to walk as a squad through a valley where we going to be ambushed.\n\nWe had been taught the tactics to respond to this and had practiced firing the weapons but this was the first time to experience them together.\n\nOthers were hesitant to lead the squad so I volunteered and, at the time of the ambush, I found that the training I had been given was adequate to withdraw the squad to a safe position.\n\nI found it an excellent opportunity to test what I had learned under pressure, as well as good test of my verbal and non-verbal communication skills."
   },
   {
     "id": "5",
     "title": "Describe a challenging project you worked on.",
-    "answer": "I worked on a project that required integrating multiple APIs for real-time data. The biggest challenge was ensuring data consistency across different sources. I overcame this by implementing a robust caching strategy and thorough testing."
+    "answer": "One of my most challenging projects has been Hiking Network. My goal was to deploy a route planning application that could run with up to 5,000 users a month without costing me anything.\n\nThis required careful optimisation. For example, Mapbox, used to load and render the map, provides an option to pay per map load, so the application was built around a single map that loads once per user.\n\nFor images, I bundled a low resolution version with the code and dynamically loaded the higher resolution version from a storage bucket at runtime, using a CSS transition to smoothly fade between them. This decreased hosting usage without increasing load times.\n\nIt's in beta testing at the moment and usage has aligned with the 5,000 user a month goal."
   },
   {
     "id": "6",
     "title": "How do you prioritize your tasks?",
-    "answer": "I prioritize tasks based on their deadlines and the impact they have on the project. I use tools like Trello to organize my workload and ensure I focus on high-priority items first."
+    "answer": "When I've worked on my own software projects, I use issues on GitHub to prioritise tasks. Anything that needs doing is added to the issues and urgent tasks are given a priority tag. \n\nIn contract work, I've provided a document outlining what tasks are necessary and what can be done if there's time to spare.\n\nI find it useful to always have an idea of what needs to be done next."
   },
   {
     "id": "7",
     "title": "How do you handle feedback?",
-    "answer": "I view feedback as an opportunity for growth. I actively seek constructive criticism from peers and supervisors, and I use it to improve my work and enhance my skills."
+    "answer": "I'm very positive in response to feedback as it's an opportunity to improve based on new information. Advice or constructive criticism is very useful as it enables me to deliver results more efficiently."
   },
   {
     "id": "8",

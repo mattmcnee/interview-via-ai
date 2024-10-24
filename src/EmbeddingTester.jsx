@@ -45,7 +45,7 @@ const EmbeddingTester = () => {
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1>Embedding Tester</h1>
       <form onSubmit={handleSubmit}>
-        <div>
+        {/* <div>
           <label>
             Enter text to generate embeddings:
             <textarea
@@ -57,7 +57,7 @@ const EmbeddingTester = () => {
               required
             />
           </label>
-        </div>
+        </div> */}
         <button type="submit" disabled={loading}>
           {loading ? 'Generating...' : 'Generate Embeddings'}
         </button>

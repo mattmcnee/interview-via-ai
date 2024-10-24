@@ -3,6 +3,7 @@ import './App.css';
 
 import OpenAIPage from './OpenAIPage';
 import EmbeddingTester from './EmbeddingTester';
+import AnswersInput from './AnswersInput';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         
         {/* Route for EmbeddingTester */}
         <Route path="/embedding" element={<EmbeddingTester />} />
+        <Route path="/answers" element={<AnswersInput />} />
       </Routes>
     </Router>
   );

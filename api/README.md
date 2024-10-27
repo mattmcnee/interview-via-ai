@@ -26,6 +26,9 @@ pip install matplotlib
 pip install scipy
 pip install librosa
 pip install IPython
+pip install inflect
+pip install tensorflow
+pip install flask
 
 # Create models directory and download HiFi-GAN models
 mkdir -p models
@@ -41,6 +44,9 @@ wget https://github.com/justinjohn0306/FakeYou-Tacotron2-Notebook/releases/downl
 mkdir generated_audio
 
 # Upload Tacotron 2 model and move from home directory to 
+cd ..
+mv res-30 ~/tts_project/
+cd tts_project
 
 # Check directory structure
 tree -L 1

@@ -6,6 +6,7 @@ const axios = require('axios');
 const Pinecone = require('@pinecone-database/pinecone').Pinecone;
 const { SpeechClient } = require('@google-cloud/speech');
 const { Buffer } = require('buffer');
+const fs = require('fs');
 
 admin.initializeApp();
 
@@ -251,15 +252,81 @@ exports.getTextFromAudio = functions.https.onRequest(async (req, res) => {
 
             // Call the Speech-to-Text API
             const [response] = await client.recognize(request);
-            const transcription = response.results
-                .map(result => result.alternatives[0].transcript)
-                .join('\n');
+            const transcription = response
 
             // Send the transcription back to the client
             res.status(200).send({ transcription });
         } catch (error) {
             console.error('Error transcribing audio:', error); // Log the error details
             res.status(500).send({ error: 'Failed to transcribe audio', details: error.message });
+        }
+    });
+});
+
+
+exports.getTextFromAudioNewPath = functions.https.onRequest(async (req, res) => {
+    corsHandler(req, res, async () => {
+        try {
+            const base64Key = functions.config().speech_to_text.service_account_key;
+            const jsonKey = Buffer.from(base64Key, 'base64').toString('utf8');
+            const serviceAccount = JSON.parse(jsonKey);
+
+            // Instantiate the Speech Client
+            const client = new SpeechClient({ credentials: serviceAccount });
+
+            // Expecting the audio file path and configurations from the request body
+            const { filename, encoding, sampleRateHertz, languageCode, fileaudio } = req.body;
+
+            const config = {
+                enableWordTimeOffsets: true,
+                encoding: encoding,  // e.g., 'LINEAR16'
+                sampleRateHertz: sampleRateHertz, // e.g., 16000
+                languageCode: languageCode, // e.g., 'en-US'
+            };
+
+            const audio = {
+                content: fileaudio,
+            };
+
+            const request = {
+                config: config,
+                audio: audio,
+            };
+
+            // Detects speech in the audio file
+            const [response] = await client.recognize(request);
+            const transcriptions = [];
+
+            response.results.forEach(result => {
+                const transcription = {
+                    text: result.alternatives[0].transcript,
+                    words: []
+                };
+
+                result.alternatives[0].words.forEach(wordInfo => {
+                    const startSecs =
+                        `${wordInfo.startTime.seconds}` +
+                        '.' +
+                        (wordInfo.startTime.nanos / 100000000);
+                    const endSecs =
+                        `${wordInfo.endTime.seconds}` +
+                        '.' +
+                        (wordInfo.endTime.nanos / 100000000);
+
+                    transcription.words.push({
+                        word: wordInfo.word,
+                        start: startSecs,
+                        end: endSecs
+                    });
+                });
+
+                transcriptions.push(transcription);
+            });
+
+            res.status(200).send(transcriptions);
+        } catch (error) {
+            console.error('Error during transcription:', error);
+            res.status(500).send('Error during transcription: ' + error.message);
         }
     });
 });

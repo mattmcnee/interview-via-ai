@@ -1,8 +1,13 @@
 const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 const cors = require('cors');
 const OpenAI = require('openai');
 const axios = require('axios');
 const Pinecone = require('@pinecone-database/pinecone').Pinecone;
+const { SpeechClient } = require('@google-cloud/speech');
+const { Buffer } = require('buffer');
+
+admin.initializeApp();
 
 const pc = new Pinecone({
   apiKey: functions.config().pinecone.api_key
@@ -211,5 +216,50 @@ exports.getSimilarDocuments = functions.https.onRequest((req, res) => {
         console.error('Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
       }
+    });
+});
+
+exports.getTextFromAudio = functions.https.onRequest(async (req, res) => {
+    corsHandler(req, res, async () => {
+        try {
+            // Retrieve the base64 encoded service account key
+            const base64Key = functions.config().speech_to_text.service_account_key;
+            const jsonKey = Buffer.from(base64Key, 'base64').toString('utf8');
+            const serviceAccount = JSON.parse(jsonKey);
+
+            // Instantiate the Speech Client
+            const client = new SpeechClient({ credentials: serviceAccount });
+
+            // Get the audio content from the request body
+            const audioContent = req.body.audio; // Expecting base64 encoded audio
+
+            console.log('Received audio content length:', audioContent ? audioContent.length : 0); // Log length of audio content
+
+            // Configure the request for Speech-to-Text API
+            const request = {
+                audio: { content: audioContent },
+                config: {
+                    encoding: 'LINEAR16', // Change as necessary
+                    sampleRateHertz: 22050, // Adjust based on your audio settings
+                    languageCode: 'en-US', // Change to your desired language
+                    enableAutomaticPunctuation: true,
+                    metadata: {
+                        data_logging_disabled: true, // Disable data logging
+                    },
+                },
+            };
+
+            // Call the Speech-to-Text API
+            const [response] = await client.recognize(request);
+            const transcription = response.results
+                .map(result => result.alternatives[0].transcript)
+                .join('\n');
+
+            // Send the transcription back to the client
+            res.status(200).send({ transcription });
+        } catch (error) {
+            console.error('Error transcribing audio:', error); // Log the error details
+            res.status(500).send({ error: 'Failed to transcribe audio', details: error.message });
+        }
     });
 });

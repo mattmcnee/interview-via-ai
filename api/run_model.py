@@ -54,6 +54,12 @@ def synthesize_text(text, models, show_graphs=True, superres_strength=5):
     h2 = models['h2']
     denoiser = models['denoiser']
     denoiser_sr = models['denoiser_sr']
+
+    max_duration = 20
+    stop_threshold = 0.5
+
+    model.decoder.max_decoder_steps = max_duration * 80
+    model.decoder.gate_threshold = stop_threshold
     
     if not text.endswith(";"):
         text = text + ";"

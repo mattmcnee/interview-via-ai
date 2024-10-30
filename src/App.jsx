@@ -8,6 +8,7 @@ import SpeechToText from './SpeechToText';
 import AudioStreamer from './AudioStreamer';
 import AudioTranscriber from './AudioTranscriber';
 import MicToText from './MicToText';
+import AudioCallPage from './AudioCall/AudioCallPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/audio" element={<SpeechToText />} />
         <Route path="/stream" element={<AudioTranscriber />} />
         <Route path="/mic" element={<MicToText />} />
+        <Route path="/call" element={<AudioCallPage />} />
       </Routes>
     </Router>
   );

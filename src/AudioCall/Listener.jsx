@@ -82,7 +82,7 @@ const Listener = () => {
                                 text: "...",
                                 username: "AI", 
                                 role: "ai",
-                                timestamp: currentTimestamp
+                                timestamp: combinedText[combinedText.length-1]?.timestamp
                             });
                         }
                     } else if (index !== 0 || currentText.length > 0) {
@@ -116,7 +116,7 @@ const Listener = () => {
                 text: "...",
                 username: "AI", 
                 role: "ai",
-                timestamp: currentTimestamp
+                timestamp: combinedText[combinedText.length-1]?.timestamp
             });
         }
     

@@ -27,6 +27,8 @@ export const AudioCallProvider = ({ children }) => {
         
     }, [userTranscript, previousMessageLength]);
 
+    
+
     return (
         <AudioCallContext.Provider value={{ userTranscript, setUserTranscript, userCurrentMessage }}>
             {children}

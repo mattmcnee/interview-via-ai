@@ -6,6 +6,8 @@ import EmbeddingTester from './EmbeddingTester';
 import AnswersInput from './AnswersInput';
 import SpeechToText from './SpeechToText';
 import AudioStreamer from './AudioStreamer';
+import AudioTranscriber from './AudioTranscriber';
+import MicToText from './MicToText';
 
 function App() {
   return (
@@ -18,7 +20,8 @@ function App() {
         <Route path="/embedding" element={<EmbeddingTester />} />
         <Route path="/answers" element={<AnswersInput />} />
         <Route path="/audio" element={<SpeechToText />} />
-        <Route path="/stream" element={<AudioStreamer />} />
+        <Route path="/stream" element={<AudioTranscriber />} />
+        <Route path="/mic" element={<MicToText />} />
       </Routes>
     </Router>
   );

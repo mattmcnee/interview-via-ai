@@ -352,61 +352,216 @@ exports.getTextFromAudioNewPath = functions.https.onRequest(async (req, res) => 
 // });
 
 
+// exports.startStream = functions.https.onRequest(async (req, res) => {
+//     corsHandler(req, res, async () => {
+//   const { sessionId } = req.body;
+
+//   if (!sessionId) {
+//     return res.status(400).send('Missing sessionId.');
+//   }
+
+//   // Create a new SpeechClient for each request
+//   const base64Key = functions.config().speech_to_text.service_account_key;
+//   const jsonKey = Buffer.from(base64Key, 'base64').toString('utf8');
+//   const serviceAccount = JSON.parse(jsonKey);
+//   const speechClient = new SpeechClient({ credentials: serviceAccount });
+
+//   // Initialize Firestore document to track the session
+//   const sessionRef = db.collection('activeSessions').doc(sessionId);
+//   await sessionRef.set({ active: true });
+
+//   // Start the streaming recognition
+//   const recognizeStream = speechClient.streamingRecognize({
+//     config: {
+//       encoding: 'LINEAR16',
+//       sampleRateHertz: 16000,
+//       languageCode: 'en-US',
+//       interimResults: true,
+//     },
+//   });
+
+//   // Handle transcription data
+//   recognizeStream.on('data', (data) => {
+//     console.log("Data recieved");
+
+//     const transcription = data.results
+//       .map(result => result.alternatives[0].transcript)
+//       .join('\n');
+
+//     // Write the transcription to Firestore under the sessionId
+//     const transcriptionRef = sessionRef.collection('transcriptions');
+//     transcriptionRef.add({
+//       text: transcription,
+//       timestamp: admin.firestore.FieldValue.serverTimestamp(),
+//     });
+//   });
+
+//   // Handle errors
+//   recognizeStream.on('error', (error) => {
+//     console.error('Error during streaming recognition:', error);
+//     // Clean up session in case of error
+//     sessionRef.update({ active: false });
+//   });
+
+//   // Clean up when streaming ends
+//   recognizeStream.on('end', async () => {
+//     console.log('Streaming ended.');
+//     await sessionRef.update({ active: false });
+//   });
+
+//   res.status(200).send({ message: 'Streaming started', sessionId });
+// });
+// });
+
 exports.startStream = functions.https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
-  const { sessionId } = req.body;
-
-  if (!sessionId) {
-    return res.status(400).send('Missing sessionId.');
-  }
-
-  // Create a new SpeechClient for each request
-  const base64Key = functions.config().speech_to_text.service_account_key;
-  const jsonKey = Buffer.from(base64Key, 'base64').toString('utf8');
-  const serviceAccount = JSON.parse(jsonKey);
-  const speechClient = new SpeechClient({ credentials: serviceAccount });
-
-  // Initialize Firestore document to track the session
-  const sessionRef = db.collection('activeSessions').doc(sessionId);
-  await sessionRef.set({ active: true });
-
-  // Start the streaming recognition
-  const recognizeStream = speechClient.streamingRecognize({
-    config: {
-      encoding: 'LINEAR16',
-      sampleRateHertz: 16000,
-      languageCode: 'en-US',
-      interimResults: true, // If you want interim results
-    },
-  });
-
-  // Handle transcription data
-  recognizeStream.on('data', (data) => {
-    const transcription = data.results
-      .map(result => result.alternatives[0].transcript)
-      .join('\n');
-
-    // Write the transcription to Firestore under the sessionId
-    const transcriptionRef = sessionRef.collection('transcriptions');
-    transcriptionRef.add({
-      text: transcription,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      const { sessionId } = req.body;
+  
+      if (!sessionId) {
+        return res.status(400).send('Missing sessionId.');
+      }
+  
+      try {
+        // Create a new SpeechClient for each request
+        const base64Key = functions.config().speech_to_text.service_account_key;
+        const jsonKey = Buffer.from(base64Key, 'base64').toString('utf8');
+        const serviceAccount = JSON.parse(jsonKey);
+        const speechClient = new SpeechClient({ credentials: serviceAccount });
+  
+        // Initialize Firestore document to track the session
+        const sessionRef = db.collection('activeSessions').doc(sessionId);
+        await sessionRef.set({ 
+          active: true,
+          startTime: admin.firestore.FieldValue.serverTimestamp(),
+          status: 'initialized'
+        });
+  
+        // Start the streaming recognition with enhanced config
+        const recognizeStream = speechClient.streamingRecognize({
+          config: {
+            encoding: 'LINEAR16',
+            sampleRateHertz: 16000,
+            languageCode: 'en-US',
+            interimResults: true,
+            enableAutomaticPunctuation: true,
+            useEnhanced: true,
+            model: 'default', // or 'phone_call' for audio from phone calls
+            metadata: {
+              interactionType: 'DICTATION',
+              microphoneDistance: 'NEARFIELD',
+            }
+          },
+        });
+  
+        // Handle transcription data with batching
+        let batchQueue = [];
+        const BATCH_SIZE = 10;
+        
+        recognizeStream.on('data', async (data) => {
+          console.log("Data received");
+  
+          const transcription = data.results
+            .map(result => ({
+              text: result.alternatives[0].transcript,
+              confidence: result.alternatives[0].confidence,
+              isFinal: result.isFinal
+            }));
+  
+          // Add to batch queue
+          batchQueue.push({
+            text: transcription[0].text,
+            confidence: transcription[0].confidence,
+            isFinal: transcription[0].isFinal,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+          });
+  
+          // Write batch to Firestore if queue is full or we have a final result
+          if (batchQueue.length >= BATCH_SIZE || transcription[0].isFinal) {
+            const batch = db.batch();
+            const transcriptionRef = sessionRef.collection('transcriptions');
+            
+            batchQueue.forEach((item) => {
+              batch.set(transcriptionRef.doc(), item);
+            });
+  
+            await batch.commit();
+            batchQueue = [];
+          }
+  
+          // Update session status
+          await sessionRef.update({ 
+            lastUpdateTime: admin.firestore.FieldValue.serverTimestamp(),
+            status: 'streaming'
+          });
+        });
+  
+        // Handle errors with more detail
+        recognizeStream.on('error', async (error) => {
+          console.error('Error during streaming recognition:', error);
+          
+          await sessionRef.update({ 
+            active: false,
+            status: 'error',
+            errorMessage: error.message,
+            endTime: admin.firestore.FieldValue.serverTimestamp()
+          });
+  
+          // Write any remaining transcriptions in the batch
+          if (batchQueue.length > 0) {
+            const batch = db.batch();
+            const transcriptionRef = sessionRef.collection('transcriptions');
+            
+            batchQueue.forEach((item) => {
+              batch.set(transcriptionRef.doc(), item);
+            });
+  
+            await batch.commit();
+          }
+        });
+  
+        // Enhanced cleanup when streaming ends
+        recognizeStream.on('end', async () => {
+          console.log('Streaming ended.');
+          
+          // Write any remaining transcriptions
+          if (batchQueue.length > 0) {
+            const batch = db.batch();
+            const transcriptionRef = sessionRef.collection('transcriptions');
+            
+            batchQueue.forEach((item) => {
+              batch.set(transcriptionRef.doc(), item);
+            });
+  
+            await batch.commit();
+          }
+  
+          await sessionRef.update({ 
+            active: false,
+            status: 'completed',
+            endTime: admin.firestore.FieldValue.serverTimestamp()
+          });
+        });
+  
+        // Set timeout to automatically close inactive streams
+        setTimeout(async () => {
+          const session = await sessionRef.get();
+          if (session.exists && session.data().active) {
+            recognizeStream.end();
+          }
+        }, 5 * 60 * 1000); // 5 minutes timeout
+  
+        res.status(200).send({ 
+          message: 'Streaming started', 
+          sessionId,
+          status: 'initialized'
+        });
+  
+      } catch (error) {
+        console.error('Failed to start streaming:', error);
+        res.status(500).send({
+          error: 'Failed to start streaming',
+          message: error.message
+        });
+      }
     });
   });
-
-  // Handle errors
-  recognizeStream.on('error', (error) => {
-    console.error('Error during streaming recognition:', error);
-    // Clean up session in case of error
-    sessionRef.update({ active: false });
-  });
-
-  // Clean up when streaming ends
-  recognizeStream.on('end', async () => {
-    console.log('Streaming ended.');
-    await sessionRef.update({ active: false });
-  });
-
-  res.status(200).send({ message: 'Streaming started', sessionId });
-});
-});

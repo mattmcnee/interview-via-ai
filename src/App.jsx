@@ -5,6 +5,7 @@ import OpenAIPage from './OpenAIPage';
 import EmbeddingTester from './EmbeddingTester';
 import AnswersInput from './AnswersInput';
 import SpeechToText from './SpeechToText';
+import AudioStreamer from './AudioStreamer';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/embedding" element={<EmbeddingTester />} />
         <Route path="/answers" element={<AnswersInput />} />
         <Route path="/audio" element={<SpeechToText />} />
+        <Route path="/stream" element={<AudioStreamer />} />
       </Routes>
     </Router>
   );

@@ -9,6 +9,7 @@ const { Buffer } = require('buffer');
 const fs = require('fs');
 
 admin.initializeApp();
+const db = admin.firestore();
 
 const pc = new Pinecone({
   apiKey: functions.config().pinecone.api_key
@@ -279,6 +280,7 @@ exports.getTextFromAudioNewPath = functions.https.onRequest(async (req, res) => 
 
             const config = {
                 enableWordTimeOffsets: true,
+                enableAutomaticPunctuation: true,
                 encoding: encoding,  // e.g., 'LINEAR16'
                 sampleRateHertz: sampleRateHertz, // e.g., 16000
                 languageCode: languageCode, // e.g., 'en-US'
@@ -329,4 +331,82 @@ exports.getTextFromAudioNewPath = functions.https.onRequest(async (req, res) => 
             res.status(500).send('Error during transcription: ' + error.message);
         }
     });
+});
+
+
+// exports.getTextFromStreamedAudio = functions.https.onRequest(async (req, res) => {
+//     corsHandler(req, res, async () => {
+//         try {
+//             const base64Key = functions.config().speech_to_text.service_account_key;
+//             const jsonKey = Buffer.from(base64Key, 'base64').toString('utf8');
+//             const serviceAccount = JSON.parse(jsonKey);
+
+//             // Instantiate the Speech Client
+//             const client = new SpeechClient({ credentials: serviceAccount });
+
+//         } catch (error) {
+//             console.error('Error during transcription:', error);
+//             res.status(500).send('Error during transcription: ' + error.message);
+//         }
+//     });
+// });
+
+
+exports.startStream = functions.https.onRequest(async (req, res) => {
+    corsHandler(req, res, async () => {
+  const { sessionId } = req.body;
+
+  if (!sessionId) {
+    return res.status(400).send('Missing sessionId.');
+  }
+
+  // Create a new SpeechClient for each request
+  const base64Key = functions.config().speech_to_text.service_account_key;
+  const jsonKey = Buffer.from(base64Key, 'base64').toString('utf8');
+  const serviceAccount = JSON.parse(jsonKey);
+  const speechClient = new SpeechClient({ credentials: serviceAccount });
+
+  // Initialize Firestore document to track the session
+  const sessionRef = db.collection('activeSessions').doc(sessionId);
+  await sessionRef.set({ active: true });
+
+  // Start the streaming recognition
+  const recognizeStream = speechClient.streamingRecognize({
+    config: {
+      encoding: 'LINEAR16',
+      sampleRateHertz: 16000,
+      languageCode: 'en-US',
+      interimResults: true, // If you want interim results
+    },
+  });
+
+  // Handle transcription data
+  recognizeStream.on('data', (data) => {
+    const transcription = data.results
+      .map(result => result.alternatives[0].transcript)
+      .join('\n');
+
+    // Write the transcription to Firestore under the sessionId
+    const transcriptionRef = sessionRef.collection('transcriptions');
+    transcriptionRef.add({
+      text: transcription,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  });
+
+  // Handle errors
+  recognizeStream.on('error', (error) => {
+    console.error('Error during streaming recognition:', error);
+    // Clean up session in case of error
+    sessionRef.update({ active: false });
+  });
+
+  // Clean up when streaming ends
+  recognizeStream.on('end', async () => {
+    console.log('Streaming ended.');
+    await sessionRef.update({ active: false });
+  });
+
+  res.status(200).send({ message: 'Streaming started', sessionId });
+});
 });

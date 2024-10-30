@@ -52,20 +52,21 @@ const MicToText = () => {
         let combinedText = [];
         let currentText = ''; // temporary string to hold the current segment
         let currentTimestamp = null; // timestamp of the first response for the current segment
-        let wordGap = -TIMESLICE / 1000; // initialize wordGap as per TIMESLICE
+        let mostRecentWord = 0;
+        let timeElapsed = 0;
     
         // Process each response in order
         orderedResponses.forEach(response => {
 
             currentTimestamp = response.timestamp;
+            timeElapsed += TIMESLICE/1000;
 
 
             response.text.forEach(textObj => {
 
-                wordGap += TIMESLICE / 1000;
                 textObj.words.forEach((wordObj, index) => {
                     // Check if we need to start a new segment
-                    if (wordGap + parseFloat(wordObj.start) > PAUSE_THRESHOLD) {
+                    if (parseFloat(wordObj.start) + timeElapsed > PAUSE_THRESHOLD + mostRecentWord) {
                         // Push the current segment to combinedText
                         if (currentText.length > 0) {
                             combinedText.push({
@@ -85,7 +86,7 @@ const MicToText = () => {
                     currentText += wordObj.word;
     
                     // Update wordGap to the negative end time of the current word
-                    wordGap = -parseFloat(wordObj.end);
+                    mostRecentWord = timeElapsed + parseFloat(wordObj.end);
                 });
             });
         });
@@ -196,7 +197,14 @@ const MicToText = () => {
                 Stop Recording
             </button>
 
-            {/* <div>{combinedResponse}</div> */}
+            <div>
+                {combinedResponse && combinedResponse.map((segment, index) => (
+                    <div key={index} className="text-segment">
+                        <p><strong>{segment.username}:</strong> {segment.text}</p>
+                    </div>
+                ))}
+            </div>
+
             {error && <div>Error: {error}</div>}
         </div>
     );

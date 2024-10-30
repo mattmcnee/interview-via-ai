@@ -11,6 +11,7 @@ const MicToText = () => {
     const intervalRef = useRef(null);
 
     const TIMESLICE = 3000;
+    const PAUSE_THRESHOLD = 0.7
 
     useEffect(() => {
         const setupMediaRecorder = async () => {
@@ -45,9 +46,17 @@ const MicToText = () => {
     }, []);  
 
     useEffect(() => {
-        // Update combinedResponse whenever responses change
-        setCombinedResponse(responses.join(' '));
+        // Sort responses by timestamp, then combine the text fields
+        const combinedText = responses
+            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+            .flatMap(response => response.text)
+            .map(textObject => textObject.text)
+            .join(' ');
+    
+        console.log("Combined Text:", combinedText);
+        setCombinedResponse(combinedText);
     }, [responses]);
+    
 
     const handleStartRecording = () => {
         if (mediaRecorder && mediaRecorder.state === 'inactive') {
@@ -101,6 +110,7 @@ const MicToText = () => {
         const reader = new FileReader();
         reader.onloadend = async () => {
             const base64Audio = reader.result.split(',')[1];
+            const timestamp = new Date().toISOString();
 
             try {
                 const result = await axios.post(`${import.meta.env.VITE_API_URL}/getTextFromAudioNewPath`, {
@@ -110,9 +120,12 @@ const MicToText = () => {
                     languageCode: 'en-US',
                     fileaudio: base64Audio,
                 });
-                const transcript = result?.data[0]?.text;
-                if (transcript)
-                    setResponses((prevResponses) => [...prevResponses, transcript]);
+
+                setResponses((prevResponses) => [...prevResponses, {
+                    text: result?.data,
+                    timestamp: timestamp,
+                }]);
+
                 console.log("Response:", result.data);
                 setError(null);
             } catch (err) {

@@ -11,7 +11,7 @@ const MicToText = () => {
     const intervalRef = useRef(null);
 
     const TIMESLICE = 3000;
-    const PAUSE_THRESHOLD = 0.7
+    const PAUSE_THRESHOLD = 1.2
 
     useEffect(() => {
         const setupMediaRecorder = async () => {
@@ -46,16 +46,65 @@ const MicToText = () => {
     }, []);  
 
     useEffect(() => {
-        // Sort responses by timestamp, then combine the text fields
-        const combinedText = responses
-            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-            .flatMap(response => response.text)
-            .map(textObject => textObject.text)
-            .join(' ');
+        // Sort responses by timestamp
+        const orderedResponses = responses.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
+        let combinedText = [];
+        let currentText = ''; // temporary string to hold the current segment
+        let currentTimestamp = null; // timestamp of the first response for the current segment
+        let wordGap = -TIMESLICE / 1000; // initialize wordGap as per TIMESLICE
     
-        console.log("Combined Text:", combinedText);
+        // Process each response in order
+        orderedResponses.forEach(response => {
+
+            currentTimestamp = response.timestamp;
+
+
+            response.text.forEach(textObj => {
+
+                wordGap += TIMESLICE / 1000;
+                textObj.words.forEach((wordObj, index) => {
+                    // Check if we need to start a new segment
+                    if (wordGap + parseFloat(wordObj.start) > PAUSE_THRESHOLD) {
+                        // Push the current segment to combinedText
+                        if (currentText.length > 0) {
+                            combinedText.push({
+                                text: currentText,
+                                username: "User", 
+                                timestamp: currentTimestamp
+                            });
+                            currentText = ''; // reset for a new segment
+                            currentTimestamp = response.timestamp; // update to the new segment's starting timestamp
+                        }
+                    } else if (index !== 0 || currentText.length > 0) {
+                        // Add a space between words unless it's the first word
+                        currentText += ' ';
+                    }
+    
+                    // Append the word to the current text segment
+                    currentText += wordObj.word;
+    
+                    // Update wordGap to the negative end time of the current word
+                    wordGap = -parseFloat(wordObj.end);
+                });
+            });
+        });
+    
+        // Push the last segment if it's non-empty
+        if (currentText.length > 0) {
+            combinedText.push({
+                text: currentText,
+                username: "User",
+                timestamp: currentTimestamp
+            });
+        }
+    
+        console.log("Combined Text Array:", combinedText);
         setCombinedResponse(combinedText);
     }, [responses]);
+    
+    
+    
     
 
     const handleStartRecording = () => {
@@ -147,7 +196,7 @@ const MicToText = () => {
                 Stop Recording
             </button>
 
-            <div>{combinedResponse}</div> {/* Display the combined response */}
+            {/* <div>{combinedResponse}</div> */}
             {error && <div>Error: {error}</div>}
         </div>
     );

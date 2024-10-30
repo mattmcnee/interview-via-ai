@@ -111,7 +111,7 @@ const Listener = () => {
             });
         }
 
-        if (timeElapsed > mostRecentWord + PAUSE_THRESHOLD && mostRecentWord != 0) {
+        if (timeElapsed > mostRecentWord + PAUSE_THRESHOLD && mostRecentWord != 0 && combinedText[combinedText.length-1]?.role === "user") {
             combinedText.push({
                 text: "...",
                 username: "AI", 

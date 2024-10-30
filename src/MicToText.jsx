@@ -5,18 +5,21 @@ const MicToText = () => {
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState(null);
     const audioChunksRef = useRef([]);
-    const [response, setResponse] = useState(null);
+    const [responses, setResponses] = useState([]);
+    const [combinedResponse, setCombinedResponse] = useState(''); // New state variable
     const [error, setError] = useState(null);
+    const intervalRef = useRef(null);
+
+    const TIMESLICE = 3000;
 
     useEffect(() => {
         const setupMediaRecorder = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const recorder = new MediaRecorder(stream);
+                const recorder = new MediaRecorder(stream, { timeslice: TIMESLICE }); // 1 second chunks
                 recorder.ondataavailable = (event) => {
                     if (event.data.size > 0) {
                         audioChunksRef.current.push(event.data);
-                        console.log("Data chunk added:", event.data);
                     }
                 };
                 recorder.onstop = handleCompleteStopRecording;
@@ -34,9 +37,17 @@ const MicToText = () => {
         return () => {
             if (mediaRecorder) {
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                }
             }
         };
-    }, []); 
+    }, []);  
+
+    useEffect(() => {
+        // Update combinedResponse whenever responses change
+        setCombinedResponse(responses.join(' '));
+    }, [responses]);
 
     const handleStartRecording = () => {
         if (mediaRecorder && mediaRecorder.state === 'inactive') {
@@ -44,6 +55,10 @@ const MicToText = () => {
             mediaRecorder.start();
             setIsRecording(true);
             console.log("Recording started");
+            intervalRef.current = setInterval(() => {
+                mediaRecorder.stop();
+                mediaRecorder.start();
+            }, TIMESLICE);
         }
     };
 
@@ -52,38 +67,34 @@ const MicToText = () => {
             mediaRecorder.stop();
             setIsRecording(false);
             console.log("Recording stopped");
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+            sendCurrentAudio();
         }
     };
 
     const handleCompleteStopRecording = async () => {
-        console.log("Stop event triggered");
-        if (audioChunksRef.current.length > 0) {
-            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-
-            // Decode the audio to dynamically get the sample rate
-            const audioContext = new AudioContext();
-            const arrayBuffer = await audioBlob.arrayBuffer();
-            const decodedAudio = await audioContext.decodeAudioData(arrayBuffer);
-            console.log("Dynamically calculated sample rate:", decodedAudio.sampleRate);
-
-            await sendAudio(audioBlob, decodedAudio.sampleRate);
-            downloadAudio(audioBlob); // Trigger download
-            audioChunksRef.current = [];
+        if (audioChunksRef.current.length > 0) {            
+            await sendCurrentAudio();
         } else {
             console.error("No audio chunks available.");
             setError("No audio was recorded. Please try again.");
         }
     };
 
-    const downloadAudio = (audioBlob) => {
-        const url = URL.createObjectURL(audioBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'recording.webm';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url); // Free up the memory
+    const sendCurrentAudio = async () => {
+        if (audioChunksRef.current.length > 0) {
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+            const audioContext = new AudioContext();
+            const arrayBuffer = await audioBlob.arrayBuffer();
+            const decodedAudio = await audioContext.decodeAudioData(arrayBuffer);
+
+            console.log("Sent audio:", decodedAudio);
+
+            await sendAudio(audioBlob, decodedAudio.sampleRate);
+            audioChunksRef.current = []; 
+        }
     };
 
     const sendAudio = async (audioBlob, sampleRate = 22050) => {
@@ -99,11 +110,14 @@ const MicToText = () => {
                     languageCode: 'en-US',
                     fileaudio: base64Audio,
                 });
-                setResponse(result.data);
+                const transcript = result?.data[0]?.text;
+                if (transcript)
+                    setResponses((prevResponses) => [...prevResponses, transcript]);
+                console.log("Response:", result.data);
                 setError(null);
             } catch (err) {
                 setError(err.message);
-                setResponse(null);
+                setResponses([]);
             }
         };
 
@@ -120,7 +134,7 @@ const MicToText = () => {
                 Stop Recording
             </button>
 
-            {response && <div>Response: {JSON.stringify(response)}</div>}
+            <div>{combinedResponse}</div> {/* Display the combined response */}
             {error && <div>Error: {error}</div>}
         </div>
     );

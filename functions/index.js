@@ -280,10 +280,10 @@ exports.getTextFromAudioNewPath = functions.https.onRequest(async (req, res) => 
 
             const config = {
                 enableWordTimeOffsets: true,
-                enableAutomaticPunctuation: true,
-                encoding: encoding,  // e.g., 'LINEAR16'
-                sampleRateHertz: sampleRateHertz, // e.g., 16000
-                languageCode: languageCode, // e.g., 'en-US'
+                enableAutomaticPunctuation: false,
+                encoding: encoding,
+                sampleRateHertz: sampleRateHertz,
+                languageCode: languageCode,
             };
 
             const audio = {

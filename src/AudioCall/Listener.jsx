@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAudioCall } from './AudioCallContext';
 
 const Listener = () => {
-    const { userTranscript, setUserTranscript, pushUserMessage } = useAudioCall();
+    const { userTranscript, setUserTranscript, pushUserMessage, setUserCurrentMessage, combinedTranscript } = useAudioCall();
 
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -178,37 +178,55 @@ const Listener = () => {
 
     const userSentences = useRef([]);
 
+    const addSentenceIfUnique = (sentence, time) => {
+        console.log("Time:", time);
+        if (sentence && !userSentences.current.includes(sentence)) {
+            userSentences.current.push(sentence);
+            setUserCurrentMessage({sentence, time: time + 1});
+        }
+    };
+
     useEffect(() => {
         let resultString = '';
+        let transcript = [];
+        let transcriptString = '';
         wordsArray.forEach((wordObj, index) => {
             const endTime = wordObj.end;
             const nextWordObj = wordsArray[index + 1];
-
+    
             // Add the current word to the result string
             resultString += wordObj.word + ' ';
-
+            transcriptString += wordObj.word + ' ';
+    
             // If there's a next word, calculate the gap
             if (nextWordObj) {
                 const gap = nextWordObj.start - endTime;
                 // If the gap is more than 1.4 seconds, add a full stop
                 if (gap > 1.4) {
-                    resultString = resultString.trim() + '. ';
-                    // add resultString to userSentences if not already there
+                    // Add resultString to userSentences if not already there
+                    addSentenceIfUnique(resultString.trim(), endTime);
+                    transcript.push({text:transcriptString.trim(), time: endTime, role: "user"});
+
+                    resultString = "";
+                    transcriptString = "";
                 }
             }
         });
-
+    
         resultString = resultString.trim();
-
+    
         // Check if the end of the last word is more than 1.4 seconds before the current time
+        
         if (wordsArray.length > 0) {
             const lastWordEndTime = wordsArray[wordsArray.length - 1].end;
             if (lastEmptyResponse - lastWordEndTime > 1.4) {
-                resultString += '.'; 
+                // Add resultString to userSentences if not already there
+                addSentenceIfUnique(resultString, lastWordEndTime);
             }
+            transcript.push({text:transcriptString.trim(), time: lastWordEndTime, role: "user"});
         }
 
-        console.log("Result String:", resultString);
+        setUserTranscript(transcript);
     }, [wordsArray, lastEmptyResponse]);
 
     return (
@@ -221,9 +239,9 @@ const Listener = () => {
             </button>
 
             <div>
-                {userTranscript && userTranscript.map((segment, index) => (
+                {combinedTranscript && combinedTranscript.map((segment, index) => (
                     <div key={index} className="text-segment">
-                        <p><strong>{segment.username}:</strong> {segment.text}</p>
+                        <p><strong>{segment.role}:</strong> {segment.text}</p>
                     </div>
                 ))}
             </div>

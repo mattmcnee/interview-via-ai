@@ -7,35 +7,38 @@ export const useAudioCall = () => {
 
 export const AudioCallProvider = ({ children }) => {
     const [userTranscript, setUserTranscript] = useState('');
-    const [previousMessageLength, setPreviousMessageLength] = useState(0); // State to track previous length
+    const [aiTranscript, setAiTranscript] = useState('');
+    const [combinedTranscript, setCombinedTranscript] = useState('');
+
+
     const [userCurrentMessage, setUserCurrentMessage] = useState('');
-
-    useEffect(() => {
-        // Assuming userTranscript is a JSON string containing an array of message objects
-        const messages = userTranscript || [];
-
-        // Check if the current length of messages has increased
-        if (messages.length > previousMessageLength) {
-            const message = messages.pop()
-            if (message.role === 'ai' && messages[previousMessageLength]?.role === 'user') {
-                // setUserCurrentMessage(messages[previousMessageLength]?.text)
-            }
-            setPreviousMessageLength(messages.length);
-        }
-
-        // Update previous message length
-        
-    }, [userTranscript, previousMessageLength]);
 
 
     const pushUserMessage = (message) => {
         console.log(`User message: ${message.text}`);
     }
 
+    useEffect(() => {
+        // Combine and sort the transcripts by time
+        const combinedTranscript = [...userTranscript, ...aiTranscript].sort((a, b) => a.time - b.time);
+        
+        // Update the state with the combined and sorted transcript
+        setCombinedTranscript(combinedTranscript);
+    }, [userTranscript, aiTranscript]);
     
 
+
     return (
-        <AudioCallContext.Provider value={{ userTranscript, setUserTranscript, userCurrentMessage, pushUserMessage }}>
+        <AudioCallContext.Provider value={{ 
+            userTranscript, 
+            setUserTranscript, 
+            userCurrentMessage, 
+            pushUserMessage, 
+            setUserCurrentMessage, 
+            aiTranscript, 
+            setAiTranscript,
+            combinedTranscript
+        }}>
             {children}
         </AudioCallContext.Provider>
     );

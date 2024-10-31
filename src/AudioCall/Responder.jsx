@@ -4,12 +4,12 @@ import axios from 'axios';
 import { useAudioCall } from './AudioCallContext';
 
 const Responder = () => {
-    const { userCurrentMessage } = useAudioCall();
+    const { userCurrentMessage, setAiTranscript } = useAudioCall();
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-  const handleClick = async (text) => {
+  const handleClick = async (text, time) => {
     setLoading(true);
     setError(null);
     setMessage(''); // Reset message on button click
@@ -26,6 +26,9 @@ const Responder = () => {
 
       console.log(result.data); // Log the response to the console
       setMessage(result.data.message); // Set the retrieved message to state
+
+        setAiTranscript(prevTranscript => [...prevTranscript, {text: result.data.message, time: time, role: "ai"}]);
+
     } catch (err) {
       setError('An error occurred while fetching similar documents.');
       console.error(err);
@@ -37,14 +40,12 @@ const Responder = () => {
 
 useEffect(() => {
     if (userCurrentMessage !== '') {
-        handleClick(userCurrentMessage);
+        handleClick(userCurrentMessage.sentence, userCurrentMessage.time);
     }
 }, [userCurrentMessage]);
 
   return (
-    <div>
-      {message && <p>{message}</p>} {/* Display the message below the button */}
-    </div>
+    <div></div>
   );
 };
 

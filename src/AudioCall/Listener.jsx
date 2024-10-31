@@ -20,11 +20,13 @@ const Listener = () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const recorder = new MediaRecorder(stream, { timeslice: TIMESLICE }); // 1 second chunks
+                
                 recorder.ondataavailable = (event) => {
                     if (event.data.size > 0) {
                         audioChunksRef.current.push(event.data);
                     }
                 };
+                
                 recorder.onstop = handleCompleteStopRecording;
                 setMediaRecorder(recorder);
             } catch (err) {
@@ -32,150 +34,22 @@ const Listener = () => {
                 setError("Failed to access microphone.");
             }
         };
-
+    
         if (!mediaRecorder) {
             setupMediaRecorder();
         }
-
+    
         return () => {
             if (mediaRecorder) {
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                mediaRecorder.stop();
                 if (intervalRef.current) {
                     clearInterval(intervalRef.current);
                 }
             }
         };
-    }, []);  
-
-    const processedUpTo = useRef(new Date(0));
-    const oldResponses = useRef([]);
-
-    const trackedResponses = useRef([]);
-
-    const addResponse = (response) => {
-        const allResponses = [...trackedResponses.current, response];
-        
-        // Sort them by timestamp
-        const orderedResponses = allResponses.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    }, []);
     
-        let currentText = '';
-        let currentTimestamp = null;
-        let timeElapsed = 0;
-        let mostRecentWord = 0;
-    
-        // Iterate over the ordered responses and accumulate text
-        orderedResponses.forEach(response => {
-
-            currentTimestamp = response.timestamp;
-            timeElapsed += TIMESLICE/1000;
-
-            if (!response.text.length > 0 && currentText.length > 0) {
-                const wordGap = timeElapsed - mostRecentWord;
-                if (wordGap > PAUSE_THRESHOLD) {
-                    currentText += ` <gap ${wordGap}> `
-                    
-                    mostRecentWord = timeElapsed;
-                }    
-            } else {
-                response.text.forEach(textObj => {
-                    textObj.words.forEach((wordObj, index) => {
-                        const wordGap = parseFloat(wordObj.start) + timeElapsed - mostRecentWord;
-                        if (wordGap > PAUSE_THRESHOLD && currentText.length > 0) {
-                            currentText += ` <gap ${wordGap}> ` + wordObj.word;
-                        } else {
-                            currentText += ' ' + wordObj.word;
-                        }
-                        mostRecentWord = timeElapsed + parseFloat(wordObj.end);
-                    });
-                });
-            }
-        });
-
-        trackedResponses.current = allResponses;
-    
-        console.log("Current Text:", currentText);
-    };
-    
-    
-    useEffect(() => {
-  
-      // filter out old responses and sort new responses chronologically 
-      const orderedResponses = responses
-        .filter(response => new Date(response.timestamp) >= processedUpTo.current)
-        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        
-        let combinedText = [];
-        let currentText = '';
-        let currentTimestamp = null;
-        let mostRecentWord = 0;
-        let timeElapsed = 0;
-    
-        orderedResponses.forEach(response => {
-
-            currentTimestamp = response.timestamp;
-            timeElapsed += TIMESLICE/1000;
-
-            response.text.forEach(textObj => {
-
-                textObj.words.forEach((wordObj, index) => {
-                    if (parseFloat(wordObj.start) + timeElapsed > PAUSE_THRESHOLD + mostRecentWord) {
-                        // Push the current segment to combinedText
-                        if (currentText.length > 0) {
-                            combinedText.push({
-                                text: currentText,
-                                username: "User", 
-                                role: "user",
-                                timestamp: currentTimestamp
-                            });
-                            currentText = '';
-                            processedUpTo.current = response.timestamp; // update to the new segment's starting timestamp
-
-                            combinedText.push({
-                                text: "...",
-                                username: "AI", 
-                                role: "ai",
-                                timestamp: combinedText[combinedText.length-1]?.timestamp
-                            });
-                        }
-                    } else if (index !== 0 || currentText.length > 0) {
-                        // Add a space between words unless it's the first word
-                        currentText += ' ';
-                    }
-    
-                    // Append the word to the current text segment
-                    currentText += wordObj.word;
-    
-                    // Update wordGap to the negative end time of the current word
-                    mostRecentWord = timeElapsed + parseFloat(wordObj.end);
-                });
-            });
-        });
-
-        timeElapsed += TIMESLICE/1000;
-    
-        // Push the last segment if it's non-empty
-        if (currentText.length > 0) {
-            combinedText.push({
-                text: currentText,
-                username: "User",
-                role: "user",
-                timestamp: currentTimestamp
-            });
-        }
-
-        if (timeElapsed > mostRecentWord + PAUSE_THRESHOLD && mostRecentWord != 0 && combinedText[combinedText.length-1]?.role === "user") {
-            combinedText.push({
-                text: "...",
-                username: "AI", 
-                role: "ai",
-                timestamp: combinedText[combinedText.length-1]?.timestamp
-            });
-        }
-    
-        // console.log("Combined Text Array:", combinedText);
-        setUserTranscript(combinedText);
-    }, [responses]);
-
     const handleStartRecording = () => {
         if (mediaRecorder && mediaRecorder.state === 'inactive') {
             audioChunksRef.current = [];
@@ -226,10 +100,11 @@ const Listener = () => {
 
     const sendAudio = async (audioBlob, sampleRate = 22050) => {
         const reader = new FileReader();
+        const timestamp = new Date().toISOString(); // Unique timestamp for ordering
+    
         reader.onloadend = async () => {
             const base64Audio = reader.result.split(',')[1];
-            const timestamp = new Date().toISOString();
-
+    
             try {
                 const result = await axios.post(`${import.meta.env.VITE_API_URL}/getTextFromAudioNewPath`, {
                     filename: 'recording.webm',
@@ -238,27 +113,103 @@ const Listener = () => {
                     languageCode: 'en-US',
                     fileaudio: base64Audio,
                 });
-
-                addResponse({
-                    text: result?.data,
+    
+                const response = {
+                    text: result?.data[0]?.text,
+                    words: result?.data[0]?.words,
                     timestamp: timestamp,
-                })
-
-                // setResponses((prevResponses) => [...prevResponses, {
-                //     text: result?.data,
-                //     timestamp: timestamp,
-                // }]);
-
-                // console.log("Response:", result.data);
+                };
+    
+                addOrderedResponse(response);
+    
                 setError(null);
             } catch (err) {
                 setError(err.message);
-                setResponses([]);
+                setResponses([]); // Clear responses on error
             }
         };
-
+    
         reader.readAsDataURL(audioBlob);
     };
+    
+    // Function to store responses in order and handle pauses
+
+    const orderedResponses = useRef([]);
+    const [wordsArray, setWordsArray] = useState([]);
+    const [lastEmptyResponse, setLastEmptyResponse] = useState(0);
+
+    const addOrderedResponse = (newResponse) => {
+        // Insert new response in order by timestamp
+        orderedResponses.current = [...orderedResponses.current, newResponse].sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+
+        const updatedResponses = orderedResponses.current;
+
+
+
+        // Flatten words from all responses into a single array
+        const allWordsWithPauses = [];
+
+        updatedResponses.forEach((response) => {
+            if (!response.words) {
+                setLastEmptyResponse(new Date(response.timestamp).getTime() / 1000 + 0.5 * TIMESLICE/1000);
+                return; // Skip if no words
+            }
+
+            // Convert response timestamp into seconds
+            const responseTimestamp = new Date(response.timestamp).getTime() / 1000; // Convert to seconds
+
+            response.words.forEach((word) => {
+                // Create a new word object with updated start and end times
+                const updatedWord = {
+                    word: word.word,
+                    start: parseFloat(word.start) + responseTimestamp,
+                    end: parseFloat(word.end) + responseTimestamp,
+                };
+                allWordsWithPauses.push(updatedWord);
+            });
+
+
+        });
+
+        setWordsArray(allWordsWithPauses);
+    };
+
+    const userSentences = useRef([]);
+
+    useEffect(() => {
+        let resultString = '';
+        wordsArray.forEach((wordObj, index) => {
+            const endTime = wordObj.end;
+            const nextWordObj = wordsArray[index + 1];
+
+            // Add the current word to the result string
+            resultString += wordObj.word + ' ';
+
+            // If there's a next word, calculate the gap
+            if (nextWordObj) {
+                const gap = nextWordObj.start - endTime;
+                // If the gap is more than 1.4 seconds, add a full stop
+                if (gap > 1.4) {
+                    resultString = resultString.trim() + '. ';
+                    // add resultString to userSentences if not already there
+                }
+            }
+        });
+
+        resultString = resultString.trim();
+
+        // Check if the end of the last word is more than 1.4 seconds before the current time
+        if (wordsArray.length > 0) {
+            const lastWordEndTime = wordsArray[wordsArray.length - 1].end;
+            if (lastEmptyResponse - lastWordEndTime > 1.4) {
+                resultString += '.'; 
+            }
+        }
+
+        console.log("Result String:", resultString);
+    }, [wordsArray, lastEmptyResponse]);
 
     return (
         <div>

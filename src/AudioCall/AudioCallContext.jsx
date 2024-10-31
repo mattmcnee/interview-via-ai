@@ -18,7 +18,7 @@ export const AudioCallProvider = ({ children }) => {
         if (messages.length > previousMessageLength) {
             const message = messages.pop()
             if (message.role === 'ai' && messages[previousMessageLength]?.role === 'user') {
-                setUserCurrentMessage(messages[previousMessageLength]?.text)
+                // setUserCurrentMessage(messages[previousMessageLength]?.text)
             }
             setPreviousMessageLength(messages.length);
         }
@@ -27,10 +27,15 @@ export const AudioCallProvider = ({ children }) => {
         
     }, [userTranscript, previousMessageLength]);
 
+
+    const pushUserMessage = (message) => {
+        console.log(`User message: ${message.text}`);
+    }
+
     
 
     return (
-        <AudioCallContext.Provider value={{ userTranscript, setUserTranscript, userCurrentMessage }}>
+        <AudioCallContext.Provider value={{ userTranscript, setUserTranscript, userCurrentMessage, pushUserMessage }}>
             {children}
         </AudioCallContext.Provider>
     );

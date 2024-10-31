@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAudioCall } from './AudioCallContext';
 
 const Listener = () => {
-    const { userTranscript, setUserTranscript } = useAudioCall();
+    const { userTranscript, setUserTranscript, pushUserMessage } = useAudioCall();
 
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -47,9 +47,62 @@ const Listener = () => {
         };
     }, []);  
 
+    const processedUpTo = useRef(new Date(0));
+    const oldResponses = useRef([]);
+
+    const trackedResponses = useRef([]);
+
+    const addResponse = (response) => {
+        const allResponses = [...trackedResponses.current, response];
+        
+        // Sort them by timestamp
+        const orderedResponses = allResponses.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+        let currentText = '';
+        let currentTimestamp = null;
+        let timeElapsed = 0;
+        let mostRecentWord = 0;
+    
+        // Iterate over the ordered responses and accumulate text
+        orderedResponses.forEach(response => {
+
+            currentTimestamp = response.timestamp;
+            timeElapsed += TIMESLICE/1000;
+
+            if (!response.text.length > 0 && currentText.length > 0) {
+                const wordGap = timeElapsed - mostRecentWord;
+                if (wordGap > PAUSE_THRESHOLD) {
+                    currentText += ` <gap ${wordGap}> `
+                    
+                    mostRecentWord = timeElapsed;
+                }    
+            } else {
+                response.text.forEach(textObj => {
+                    textObj.words.forEach((wordObj, index) => {
+                        const wordGap = parseFloat(wordObj.start) + timeElapsed - mostRecentWord;
+                        if (wordGap > PAUSE_THRESHOLD && currentText.length > 0) {
+                            currentText += ` <gap ${wordGap}> ` + wordObj.word;
+                        } else {
+                            currentText += ' ' + wordObj.word;
+                        }
+                        mostRecentWord = timeElapsed + parseFloat(wordObj.end);
+                    });
+                });
+            }
+        });
+
+        trackedResponses.current = allResponses;
+    
+        console.log("Current Text:", currentText);
+    };
+    
+    
     useEffect(() => {
-        // sort responses by timestamp as the API may return them out of order
-        const orderedResponses = responses.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  
+      // filter out old responses and sort new responses chronologically 
+      const orderedResponses = responses
+        .filter(response => new Date(response.timestamp) >= processedUpTo.current)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         
         let combinedText = [];
         let currentText = '';
@@ -61,7 +114,6 @@ const Listener = () => {
 
             currentTimestamp = response.timestamp;
             timeElapsed += TIMESLICE/1000;
-
 
             response.text.forEach(textObj => {
 
@@ -76,7 +128,7 @@ const Listener = () => {
                                 timestamp: currentTimestamp
                             });
                             currentText = '';
-                            currentTimestamp = response.timestamp; // update to the new segment's starting timestamp
+                            processedUpTo.current = response.timestamp; // update to the new segment's starting timestamp
 
                             combinedText.push({
                                 text: "...",
@@ -120,13 +172,9 @@ const Listener = () => {
             });
         }
     
-        console.log("Combined Text Array:", combinedText);
+        // console.log("Combined Text Array:", combinedText);
         setUserTranscript(combinedText);
     }, [responses]);
-    
-    
-    
-    
 
     const handleStartRecording = () => {
         if (mediaRecorder && mediaRecorder.state === 'inactive') {
@@ -169,7 +217,7 @@ const Listener = () => {
             const arrayBuffer = await audioBlob.arrayBuffer();
             const decodedAudio = await audioContext.decodeAudioData(arrayBuffer);
 
-            console.log("Sent audio:", decodedAudio);
+            // console.log("Sent audio:", decodedAudio);
 
             await sendAudio(audioBlob, decodedAudio.sampleRate);
             audioChunksRef.current = []; 
@@ -191,12 +239,17 @@ const Listener = () => {
                     fileaudio: base64Audio,
                 });
 
-                setResponses((prevResponses) => [...prevResponses, {
+                addResponse({
                     text: result?.data,
                     timestamp: timestamp,
-                }]);
+                })
 
-                console.log("Response:", result.data);
+                // setResponses((prevResponses) => [...prevResponses, {
+                //     text: result?.data,
+                //     timestamp: timestamp,
+                // }]);
+
+                // console.log("Response:", result.data);
                 setError(null);
             } catch (err) {
                 setError(err.message);

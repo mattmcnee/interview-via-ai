@@ -1,4 +1,5 @@
 from flask import Flask, request, send_file
+from flask_cors import CORS
 import io
 import numpy as np
 from scipy.io import wavfile
@@ -8,6 +9,9 @@ from setup_model import initialize_models
 from run_model import synthesize_text
 
 app = Flask(__name__)
+
+# Enable CORS for all routes
+CORS(app)  # This will allow all domains to access your API
 
 # Initialize models at startup
 print("Initializing models...")

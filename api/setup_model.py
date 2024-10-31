@@ -28,6 +28,9 @@ UNIVERSAL_HIFIGAN_PATH = "models/g_02500000"
 SUPERRES_HIFIGAN_PATH = "models/Superres_Twilight_33000"
 DICT_PATH = "merged.dict.txt"
 
+# Check for GPU availability
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def load_pronunciation_dict(dict_path):
     thisdict = {}
     try:
@@ -53,13 +56,13 @@ def get_hifigan(model_path, config_name):
     
     # Initialize and load model
     torch.manual_seed(h.seed)
-    hifigan = Generator(h).to(torch.device("cpu"))
-    state_dict_g = torch.load(model_path, map_location=torch.device("cpu"))
+    hifigan = Generator(h).to(device)
+    state_dict_g = torch.load(model_path, map_location=device)
     hifigan.load_state_dict(state_dict_g["generator"])
     hifigan.eval()
     hifigan.remove_weight_norm()
     
-    return hifigan, h, Denoiser(hifigan, mode="normal")
+    return hifigan, h, Denoiser(hifigan, mode="normal").to(device)
 
 def initialize_tacotron2(model_path):
     hparams = create_hparams()
@@ -67,8 +70,8 @@ def initialize_tacotron2(model_path):
     hparams.max_decoder_steps = 3000
     hparams.gate_threshold = 0.25
     
-    model = Tacotron2(hparams)
-    state_dict = torch.load(model_path, map_location=torch.device("cpu"))['state_dict']
+    model = Tacotron2(hparams).to(device)
+    state_dict = torch.load(model_path, map_location=device)['state_dict']
     model.load_state_dict(state_dict)
     model.eval()
     

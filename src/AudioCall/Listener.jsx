@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAudioCall } from './AudioCallContext';
 
 const Listener = () => {
-    const { userTranscript, setUserTranscript, pushUserMessage, setUserCurrentMessage, combinedTranscript } = useAudioCall();
+    const { setUserTranscript, setUserCurrentMessage, combinedTranscript } = useAudioCall();
 
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState(null);

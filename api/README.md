@@ -29,6 +29,7 @@ pip install IPython
 pip install inflect
 pip install tensorflow
 pip install flask
+pip install flask_cors
 
 # Create models directory and download HiFi-GAN models
 mkdir -p models

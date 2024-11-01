@@ -1,57 +1,59 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import headshot from '/src/assets/headshot2.jpg';
-import './Hexagon.scss'; // Import the SCSS file
+import './Hexagon.scss';
 
-const Hexagon = ({ size = 200, pulsing = false, spinning = false, clickable = false }) => {
+const Hexagon = ({ size = 300, pulsing = false, spinning = false, clickable = false }) => {
   const [rotation, setRotation] = useState(0);
-
-  useEffect(() => {
-    let intervalId;
-
-    if (spinning) {
-      intervalId = setInterval(() => {
-        setRotation((prevRotation) => prevRotation + 60);
-      }, 900);
-    }
-
-    return () => {
-      clearInterval(intervalId); // Clear the interval on component unmount
-    };
-  }, [spinning]); // Re-run the effect if the spinning prop changes
 
   const handleClick = () => {
     if (clickable) {
+      alert(clickable);
       setRotation((prevRotation) => prevRotation + 60);
     }
   };
 
+  // Handle continuous rotation when spinning is true
+  useEffect(() => {
+    let intervalId;
+    if (spinning) {
+      intervalId = setInterval(() => {
+        setRotation((prevRotation) => prevRotation + 60); // Adjust the increment for speed
+      }, 900); // 0.9 seconds
+    }
+
+    return () => {
+      clearInterval(intervalId); // Cleanup the interval on unmount or when spinning changes
+    };
+  }, [spinning]);
+
   return (
-    <div className={`hexagon-container ${pulsing ? 'pulsing' : ''}`}>
-        <svg viewBox="0 0 36 32"
-         className={`hexagon size-${size}`} // Apply dynamic size class
-        style={{ transform: `rotate(${rotation}deg)` }} // Rotation handled inline
-        onClick={handleClick} // Add click handler
-        >
-          <defs>
-            <clipPath id="shield-clip">
-              <path fillRule="evenodd" clipRule="evenodd" d="M0.585101 18.084C0.499309 17.943 0.422573 17.7973 0.355145 17.6477C0.114639 17.1171 -0.000519959 16.5558 1.76463e-06 16.0007C-0.000519959 15.4455 0.114639 14.8842 0.355145 14.3536C0.422573 14.204 0.499309 14.0583 0.585101 13.9173L7.50731 2.0507C7.58347 1.91454 7.66737 1.7833 7.7584 1.65756C8.09874 1.18542 8.52761 0.806787 9.0085 0.531252C9.48789 0.255392 10.0298 0.0760325 10.6078 0.0196952C10.7632 0.00423613 10.9197 -0.00218353 11.0766 0.000652699H24.8931L24.92 0.000740914C26.3229 -0.0262857 27.6985 0.687033 28.4558 1.98517L35.4162 13.9174C35.5019 14.0582 35.5786 14.2038 35.646 14.3532C35.8866 14.884 36.0018 15.4453 36.0013 16.0007C36.0018 16.556 35.8866 17.1174 35.646 17.6481C35.5786 17.7975 35.5019 17.9431 35.4162 18.0839L28.4558 30.0161C27.6985 31.3143 26.3229 32.0276 24.92 32.0006L24.8931 32.0007H11.0766C10.9198 32.0035 10.7633 31.9971 10.608 31.9816C10.0299 31.9253 9.48787 31.7459 9.00844 31.47C8.52697 31.1941 8.09766 30.8149 7.75713 30.342C7.66658 30.2168 7.5831 30.0861 7.50729 29.9506L0.585101 18.084Z" />
-            </clipPath>
-          </defs>
-          
-          <image
-            href={headshot} 
-            className="img" 
-            clipPath="url(#shield-clip)"
-            style={{ transform: `rotate(${-rotation}deg)` }}
-          />
-        </svg>
+    <div className={`hexagon-container`} style={{ width: size, height: size }}>
+      <svg
+        width="44"
+        height="40"
+        viewBox="0 0 44 40"
+        className={`hexagon ${pulsing ? 'pulsing' : ''}`} // Add pulsing class conditionally
+        style={{ width: '100%', height: '100%' }}
+        onClick={handleClick}
+      >
+        <defs>
+          <clipPath id="shield-clip" style={{ transition: 'transform 0.3s ease', transform: `rotate(${rotation}deg)`, transformOrigin: '22px 20px' }}>
+            <path fillRule="evenodd" clipRule="evenodd" d="M4.5851 22.084C4.49931 21.943 4.42257 21.7973 4.35514 21.6477C4.11464 21.1171 3.99948 20.5558 4 20.0007C3.99948 19.4455 4.11464 18.8842 4.35514 18.3536C4.42257 18.204 4.49931 18.0583 4.5851 17.9173L11.5073 6.0507C11.5835 5.91454 11.6674 5.7833 11.7584 5.65756C12.0987 5.18542 12.5276 4.80679 13.0085 4.53125C13.4879 4.25539 14.0298 4.07603 14.6078 4.0197C14.7632 4.00424 14.9197 3.99782 15.0766 4.00065H28.8931L28.92 4.00074C30.3229 3.97371 31.6985 4.68703 32.4558 5.98517L39.4162 17.9174C39.5019 18.0582 39.5786 18.2038 39.646 18.3532C39.8866 18.884 40.0018 19.4453 40.0013 20.0007C40.0018 20.556 39.8866 21.1174 39.646 21.6481C39.5786 21.7975 39.5019 21.9431 39.4162 22.0839L32.4558 34.0161C31.6985 35.3143 30.3229 36.0276 28.92 36.0006L28.8931 36.0007H15.0766C14.9198 36.0035 14.7633 35.9971 14.608 35.9816C14.0299 35.9253 13.4879 35.7459 13.0084 35.47C12.527 35.1941 12.0977 34.8149 11.7571 34.342C11.6666 34.2168 11.5831 34.0861 11.5073 33.9506L4.5851 22.084Z" fill="black"/>
+          </clipPath>
+        </defs>
+
+        <image
+          href={headshot}
+          className="img"
+          width="44"
+          height="40"
+          clipPath="url(#shield-clip)"
+          preserveAspectRatio="xMidYMid slice"
+          style={{ transition: 'transform 0.3s ease', transform: 'none' }}
+        />
+      </svg>
     </div>
   );
 };
 
 export default Hexagon;
-
-
-
-
-

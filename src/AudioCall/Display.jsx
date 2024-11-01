@@ -23,7 +23,7 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, combi
 
     return (
         <div className='interview-container'>
-            <Hexagon pulsing={false} spinning={false} clickable={true}/>
+            <Hexagon pulsing={false} spinning={false} clickable={false}/>
             <div className='transcript-container' ref={transcriptRef}>
                 {combinedTranscript && combinedTranscript.map((segment, index) => (
                     <div key={index} className="text-segment">

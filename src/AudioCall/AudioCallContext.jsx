@@ -64,7 +64,7 @@ export const AudioCallProvider = ({ children }) => {
 
         // setAiTranscript(prevTranscript => [...prevTranscript, ...transcriptResponses]);
 
-        callPlaySpeaker(processTextForTTS(responseMessage));
+        callPlaySpeaker(responseMessage);
     }
 
     useEffect(() => {

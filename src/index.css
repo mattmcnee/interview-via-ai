@@ -3,10 +3,21 @@
 :root {
   font-family: "Outfit", sans-serif;
   line-height: 1.5;
-  font-weight: 100;
+  font-weight: 400;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html, body{
+  margin: 0;
+  padding: 0;
+}
+
+button, input, textarea, select, span, p, h1, h2, h3, h4, h5, h6 {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }

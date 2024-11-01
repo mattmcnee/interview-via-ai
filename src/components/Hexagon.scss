@@ -1,0 +1,49 @@
+@keyframes pulsate {
+    0% {
+      transform: scale(1.04) rotate(0deg);
+    }
+    25% {
+      transform: scale(1.02) rotate(0deg); 
+    }
+    50% {
+      transform: scale(1.04) rotate(0deg);
+    }
+    75% {
+      transform: scale(1.03) rotate(0deg);
+    }
+    100% {
+      transform: scale(1.01) rotate(0deg);
+    }
+  }
+  
+  .hexagon-container {
+    &.pulsing {
+      animation: pulsate 1s infinite alternate;
+    }
+  }
+  
+  .hexagon {
+    width: 200px; // Default size, will be overridden in React
+    height: calc(200px * 0.866); // Aspect ratio for an equilateral hexagon
+    background-color: transparent;
+    position: relative;
+    margin: 0 auto;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    transition: transform 0.3s ease;
+  
+    // To allow dynamic sizing
+    &.size-200 {
+      width: 200px;
+      height: calc(200px * 0.866);
+    }
+  }
+  
+  .img {
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(0deg); // Rotate will be updated in React
+    transition: transform 0.3s ease;
+  }
+  

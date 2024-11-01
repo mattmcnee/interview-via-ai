@@ -11,6 +11,25 @@ const Speaker = () => {
 
   const cleanText = (text) => text.replace(/["'“”‘’.]/g, '').trimEnd();
 
+  // a few little tricks to make the computer box say tech things better
+  const processTextForTTS = (text) => {
+    return text.split(' ').map(word => {
+      // remove trailing punctuation
+      const trimmedWord = word.replace(/[.,!?;]$/, '');
+      const punctuation = word.slice(trimmedWord.length);
+    
+      // separate letters in fully capitalized words, allowing for an 's' at the end
+      if (/^[A-Z]+s?$/.test(trimmedWord)) {
+        const lastChar = trimmedWord.charAt(trimmedWord.length - 1) === 's' ? 's' : '';
+        const baseWord = lastChar ? trimmedWord.slice(0, -1) : trimmedWord;
+        return baseWord.split('').join(' ') + (lastChar ? `'` + lastChar : '') + punctuation;
+      }
+    
+      // replace occurences of '-' and '.' within words
+      return trimmedWord.replace(/(?<=\w)[-.]+(?=\w)/g, ' ') + punctuation;
+    }).join(' ').replace(/\bjs\b/g, 'J S'); // make it say "js" properly
+  };
+
   const playNextAudio = () => {
     if (currentAudioIndex < audioUrls.length && !isPlayingRef.current) {
 
@@ -49,7 +68,7 @@ const Speaker = () => {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ text: sentence.trim() })
+          body: JSON.stringify({ text: processTextForTTS(sentence).trim() })
         });
 
         const timeoutPromise = new Promise((_, reject) => 

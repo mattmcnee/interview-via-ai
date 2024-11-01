@@ -173,6 +173,10 @@ const Listener = () => {
         }
     };
 
+    const capitalizeAndTrim = (str) => 
+        str ? str.trim().charAt(0).toUpperCase() + str.trim().slice(1) : str;
+      
+
     useEffect(() => {
         let resultString = '';
         let transcript = [];
@@ -210,7 +214,7 @@ const Listener = () => {
                 // Add resultString to userSentences if not already there
                 addSentenceIfUnique(resultString, lastWordEndTime);
             }
-            transcript.push({text:transcriptString.trim(), time: lastWordEndTime, role: "user"});
+            transcript.push({text:capitalizeAndTrim(transcriptString), time: lastWordEndTime, role: "user"});
         }
 
         setUserTranscript(transcript);

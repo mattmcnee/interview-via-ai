@@ -7,11 +7,16 @@ const Speaker = () => {
   const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
   const audioRef = useRef(null);
   const isPlayingRef = useRef(false);
-  const { playSpeakerRef } = useAudioCall();
+  const { playSpeakerRef, setAiTranscript } = useAudioCall();
+
+  const cleanText = (text) => text.replace(/["'“”‘’.]/g, '').trimEnd();
 
   const playNextAudio = () => {
     if (currentAudioIndex < audioUrls.length && !isPlayingRef.current) {
-      audioRef.current = new Audio(audioUrls[currentAudioIndex]);
+
+      setAiTranscript(prevTranscript => [...prevTranscript, { text: cleanText(audioUrls[currentAudioIndex].text), time: new Date().getTime() / 1000, role: "ai" }]);
+
+      audioRef.current = new Audio(audioUrls[currentAudioIndex].url);
       isPlayingRef.current = true;
 
       audioRef.current.play();
@@ -65,7 +70,12 @@ const Speaker = () => {
 
             const audioBlob = await response.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
-            newAudioUrls.push(audioUrl);
+            
+            // Create an object with url and text attributes
+            newAudioUrls.push({
+              url: audioUrl,
+              text: sentence.trim()
+            });
 
             // Update audioUrls immediately after each file is fetched
             setAudioUrls([...newAudioUrls]);

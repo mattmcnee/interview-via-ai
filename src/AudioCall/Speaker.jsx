@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAudioCall } from './AudioCallContext';
 
 const Speaker = () => {
   const [audioUrls, setAudioUrls] = useState([]);
   const [error, setError] = useState('');
   const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
-
+  const audioRef = useRef(null); // Ref to manage the audio playback state
   const { playSpeakerRef } = useAudioCall();
 
   useEffect(() => {
@@ -14,12 +14,11 @@ const Speaker = () => {
       setAudioUrls([]);
       setCurrentAudioIndex(0);
 
-      // split input text into sentences by ".", "!", or "?"
+      // Split input text into sentences by ".", "!", or "?"
       const sentences = transcript.match(/[^.!?]+[.!?]/g) || [transcript];
       const newAudioUrls = [];
 
       const fetchAudio = async (sentence) => {
-        // create a fetch request promise for the API
         const fetchPromise = fetch(`${import.meta.env.VITE_TACOTRON_URL}/generate`, {
           method: "POST",
           headers: {
@@ -28,18 +27,16 @@ const Speaker = () => {
           body: JSON.stringify({ text: sentence.trim() })
         });
 
-        // create a 5 second timeout promise
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Fetch timeout after 5 seconds')), 5000)
         );
 
-        // use Promise.race to wait for either the fetch or the timeout
         return Promise.race([fetchPromise, timeoutPromise]);
       };
 
       const getAudioUrls = async () => {
         try {
-          // fetch audio for each sentence sequentially
+          // Fetch audio for each sentence sequentially
           for (const sentence of sentences) {
             const response = await fetchAudio(sentence);
 
@@ -50,15 +47,9 @@ const Speaker = () => {
             const audioBlob = await response.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
             newAudioUrls.push(audioUrl);
-
-            // start playing the first audio as soon as it arrives
-            if (newAudioUrls.length === 1) {
-              setAudioUrls(newAudioUrls);
-              setCurrentAudioIndex(0);
-            }
           }
 
-          // set remaining audio URLs once all are fetched
+          // Set audio URLs for playback
           setAudioUrls(newAudioUrls);
 
         } catch (err) {
@@ -71,20 +62,36 @@ const Speaker = () => {
 
     return () => {
       playSpeakerRef.current = null;
+      if (audioRef.current) {
+        audioRef.current.pause(); // Stop audio if component unmounts
+        audioRef.current.src = ''; // Clean up the audio source
+      }
     };
   }, [playSpeakerRef]);
 
   useEffect(() => {
     if (audioUrls.length > 0 && currentAudioIndex < audioUrls.length) {
-      const audio = new Audio(audioUrls[currentAudioIndex]);
+      audioRef.current = new Audio(audioUrls[currentAudioIndex]);
 
-      // play current audio and move to the next once it finishes
-      audio.play();
-      audio.onended = () => {
+      // Play current audio
+      audioRef.current.play();
+
+      // When the current audio ends, move to the next one
+      audioRef.current.onended = () => {
         setCurrentAudioIndex((prevIndex) => prevIndex + 1);
       };
     }
   }, [audioUrls, currentAudioIndex]);
+
+  // Handle cleanup of the audio object on unmount or index change
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = ''; // Clean up the audio source
+      }
+    };
+  }, []);
 
   return (
     <div>

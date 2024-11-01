@@ -70,7 +70,7 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, combi
         <div className='interview-container'>
             <div className='call-members'>
                 <VideoHexagon pulsing={false} spinning={false} clickable={true} videoRef={videoRef} videoOn={videoOn} name={"Matt"} uniqueId={2} />
-                <Hexagon pulsing={false} spinning={false} clickable={true} uniqueId={1} />
+                <Hexagon pulsing={false} spinning={false} clickable={false} uniqueId={1} />
             </div>
             <div className='transcript-container' ref={transcriptRef}>
                 {combinedTranscript && combinedTranscript.map((segment, index) => (
@@ -96,18 +96,18 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, combi
                 {videoOn ? (
                     <button onClick={stopVideo} className="mic-button">
                         <img src={videoOnIcon} alt="Turn off video" />
-                        <div className="button-text">Stop Video</div>
+                        <div className="button-text">Video On</div>
                     </button>
                 ) : (
                     <button onClick={startVideo} className="mic-button">
                         <img src={videoOffIcon} alt="Turn on video" />
-                        <div className="button-text">Start Video</div>
+                        <div className="button-text">Video Off</div>
                     </button>
                 )}
 
                 <button onClick={() => alert("Time")} className="mic-button">
                     <img src={hourglassIcon} alt="Check Time" />
-                    <div className="button-text">4:37</div>
+                    <div className="button-text">2:17 Remaining</div>
                 </button>
 
                 <button onClick={() => alert("Exit meeting")} className="mic-button">

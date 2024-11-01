@@ -9,37 +9,51 @@ const Speaker = () => {
   const isPlayingRef = useRef(false);
   const { playSpeakerRef, setAiTranscript } = useAudioCall();
 
-  const cleanText = (text) => text.replace(/["'“”‘’.]/g, '').trimEnd();
+  const cleanText = (text) => text.replace(/["“”‘’]/g, '').trimEnd();
 
-  // a few little tricks to make the computer box say tech things better
+  // Process text for TTS
   const processTextForTTS = (text) => {
     return text.split(' ').map(word => {
-      // remove trailing punctuation
       const trimmedWord = word.replace(/[.,!?;]$/, '');
       const punctuation = word.slice(trimmedWord.length);
-    
-      // separate letters in fully capitalized words, allowing for an 's' at the end
+
       if (/^[A-Z]+s?$/.test(trimmedWord)) {
         const lastChar = trimmedWord.charAt(trimmedWord.length - 1) === 's' ? 's' : '';
         const baseWord = lastChar ? trimmedWord.slice(0, -1) : trimmedWord;
         return baseWord.split('').join(' ') + (lastChar ? `'` + lastChar : '') + punctuation;
       }
-    
-      // replace occurences of '-' and '.' within words
+
       return trimmedWord.replace(/(?<=\w)[-.]+(?=\w)/g, ' ') + punctuation;
-    }).join(' ').replace(/\bjs\b/g, 'J S'); // make it say "js" properly
+    }).join(' ').replace(/\bjs\b/g, 'J S');
   };
 
   const playNextAudio = () => {
     if (currentAudioIndex < audioUrls.length && !isPlayingRef.current) {
+      const currentAudio = audioUrls[currentAudioIndex];
+      
+      // Set transcript but skip audio play if url is "err"
 
-      setAiTranscript(prevTranscript => [...prevTranscript, { text: cleanText(audioUrls[currentAudioIndex].text), time: new Date().getTime() / 1000, role: "ai" }]);
 
-      audioRef.current = new Audio(audioUrls[currentAudioIndex].url);
+      if (currentAudio.url === "err") {
+        setCurrentAudioIndex((prevIndex) => prevIndex + 1);
+
+        setAiTranscript(prevTranscript => [
+          ...prevTranscript,
+          { text: "<Speech Error> " + cleanText(currentAudio.text), time: new Date().getTime() / 1000, role: "ai" }
+        ]);
+
+        return;
+      }
+
+      setAiTranscript(prevTranscript => [
+        ...prevTranscript,
+        { text: cleanText(currentAudio.text), time: new Date().getTime() / 1000, role: "ai" }
+      ]);
+
+      audioRef.current = new Audio(currentAudio.url);
       isPlayingRef.current = true;
 
       audioRef.current.play();
-
       audioRef.current.onended = () => {
         isPlayingRef.current = false;
         setCurrentAudioIndex((prevIndex) => prevIndex + 1);
@@ -51,6 +65,32 @@ const Speaker = () => {
     playNextAudio();
   }, [audioUrls, currentAudioIndex]);
 
+  const splitIntoSentences = (paragraph) => {
+    // replace any fullstops between letters with a temporary marker
+    const withProtectedFullstops = paragraph.replace(/(?<=\w)\.(?=\w)/g, '__FULLSTOP__');
+    
+    // split on sentence endings
+    const sentenceRegex = /[^.!?]+[.!?](?:\s|$)/g;
+    const sentences = withProtectedFullstops.match(sentenceRegex) || [];
+    
+    // handle any remaining text after the last ending punctuation
+    const lastPart = withProtectedFullstops.split(/[.!?](?:\s|$)/).pop();
+    
+    if (lastPart && lastPart.trim() !== '') {
+        sentences.push(lastPart.trim());
+    }
+
+    // restore protected fullstops and remove ending punctuation
+    return sentences
+        .map(sentence => 
+            sentence
+                .trim()
+                .replace(/__FULLSTOP__/g, '.')
+                .replace(/[.]$/, '')
+        );
+  }
+
+
   useEffect(() => {
     playSpeakerRef.current = (transcript) => {
       setError('');
@@ -58,29 +98,28 @@ const Speaker = () => {
       setCurrentAudioIndex(0);
       isPlayingRef.current = false;
 
-      // Split input text into sentences by ".", "!", or "?"
-      const sentences = transcript.match(/[^.!?]+[.!?]/g) || [transcript];
+      const sentences = splitIntoSentences(transcript);
       const newAudioUrls = [];
+
+      console.log("Sentences:", sentences);
 
       const fetchAudio = async (sentence) => {
         const fetchPromise = fetch(`${import.meta.env.VITE_TACOTRON_URL}/generate`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: processTextForTTS(sentence).trim() })
         });
 
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Fetch timeout after 5 seconds')), 5000)
+          setTimeout(() => reject(new Error('Fetch timeout after 3 seconds')), 3000)
         );
 
         return Promise.race([fetchPromise, timeoutPromise]);
       };
 
       const getAudioUrls = async () => {
-        try {
-          for (const sentence of sentences) {
+        for (const sentence of sentences) {
+          try {
             const response = await fetchAudio(sentence);
 
             if (!response.ok) {
@@ -89,18 +128,14 @@ const Speaker = () => {
 
             const audioBlob = await response.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
-            
-            // Create an object with url and text attributes
-            newAudioUrls.push({
-              url: audioUrl,
-              text: sentence.trim()
-            });
 
-            // Update audioUrls immediately after each file is fetched
-            setAudioUrls([...newAudioUrls]);
+            newAudioUrls.push({ url: audioUrl, text: sentence.trim() });
+          } catch (err) {
+            setError(`Error: ${err.message}`);
+            newAudioUrls.push({ url: "err", text: sentence.trim() });
           }
-        } catch (err) {
-          setError(`Error: ${err.message}`);
+
+          setAudioUrls([...newAudioUrls]);
         }
       };
 
@@ -116,7 +151,6 @@ const Speaker = () => {
     };
   }, [playSpeakerRef]);
 
-  // Cleanup effect
   useEffect(() => {
     return () => {
       if (audioRef.current) {
@@ -128,7 +162,7 @@ const Speaker = () => {
 
   return (
     <div>
-      {/* {error && <p style={{ color: 'red' }}>{error}</p>} */}
+      {/* Display error messages if needed */}
     </div>
   );
 };

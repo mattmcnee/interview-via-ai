@@ -59,7 +59,7 @@ const VideoHexagon = ({ size = 300, pulsing = false, spinning = false, clickable
               }}
             />
           ) : (
-            <div style={{
+            <div className="no-select" style={{
               width: '44px',
               height: '40px',
               display: 'flex',

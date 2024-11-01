@@ -21,9 +21,9 @@ const Responder = () => {
     const handleClick = async (text, time) => {
         const preprompt = `You are a candidate in a job interview answering questions. 
         Use only the relevant details about yourself in the provided context to answer questions.
-        If greeted or thanked, respond appropriately without requiring context; DO NOT USE "!"; if your response is only a few words, perhaps thank the interviewer for their time.
+        If greeted or thanked, respond politely without requiring context; DO NOT USE "!"
         Apologise if no relevant content is available, say either that you "don't know" or "can't recall" and ask for other questions. 
-        Be concise; DO NOT OFFER TO ASSIST OR HELP THE USER; do not break character; do not refer to "the context"`;
+        Be concise; DO NOT OFFER TO ASSIST OR HELP THE USER; do not break character; do not refer to "the context"; DO NOT USE "!"`;
 
         try {
             const topK = 5; // number of similar documents to retrieve

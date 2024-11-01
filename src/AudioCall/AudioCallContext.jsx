@@ -46,10 +46,23 @@ export const AudioCallProvider = ({ children }) => {
         }).join(' ').replace(/\bjs\b/g, 'J S'); // make it say "js" properly
     };
 
+    const processTextForTranscript = (text, time) => {
+        return text.split(/(?<=[.!?])\s+(?=[A-Z])/g)
+            .filter(sentence => sentence.trim() !== '')
+            .map((sentence, index) => ({
+                text: sentence.replace(/\./g, '').trim(),
+                time: time + 0.1 * index,
+                role: "ai"
+            }));
+    };
+    
+
     const pushUserMessage = async (message) => {
         const responseMessage =  await callGenerateResponse(message);
 
-        setAiTranscript(prevTranscript => [...prevTranscript, { text: responseMessage, time: message.time, role: "ai" }]);
+        const transcriptResponses = processTextForTranscript(responseMessage, message.time)
+
+        setAiTranscript(prevTranscript => [...prevTranscript, ...transcriptResponses]);
 
         callPlaySpeaker(processTextForTTS(responseMessage));
     }

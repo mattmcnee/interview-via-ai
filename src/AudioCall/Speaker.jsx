@@ -5,14 +5,34 @@ const Speaker = () => {
   const [audioUrls, setAudioUrls] = useState([]);
   const [error, setError] = useState('');
   const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
-  const audioRef = useRef(null); // Ref to manage the audio playback state
+  const audioRef = useRef(null);
+  const isPlayingRef = useRef(false);
   const { playSpeakerRef } = useAudioCall();
+
+  const playNextAudio = () => {
+    if (currentAudioIndex < audioUrls.length && !isPlayingRef.current) {
+      audioRef.current = new Audio(audioUrls[currentAudioIndex]);
+      isPlayingRef.current = true;
+
+      audioRef.current.play();
+
+      audioRef.current.onended = () => {
+        isPlayingRef.current = false;
+        setCurrentAudioIndex((prevIndex) => prevIndex + 1);
+      };
+    }
+  };
+
+  useEffect(() => {
+    playNextAudio();
+  }, [audioUrls, currentAudioIndex]);
 
   useEffect(() => {
     playSpeakerRef.current = (transcript) => {
       setError('');
       setAudioUrls([]);
       setCurrentAudioIndex(0);
+      isPlayingRef.current = false;
 
       // Split input text into sentences by ".", "!", or "?"
       const sentences = transcript.match(/[^.!?]+[.!?]/g) || [transcript];
@@ -36,7 +56,6 @@ const Speaker = () => {
 
       const getAudioUrls = async () => {
         try {
-          // Fetch audio for each sentence sequentially
           for (const sentence of sentences) {
             const response = await fetchAudio(sentence);
 
@@ -47,11 +66,10 @@ const Speaker = () => {
             const audioBlob = await response.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
             newAudioUrls.push(audioUrl);
+
+            // Update audioUrls immediately after each file is fetched
+            setAudioUrls([...newAudioUrls]);
           }
-
-          // Set audio URLs for playback
-          setAudioUrls(newAudioUrls);
-
         } catch (err) {
           setError(`Error: ${err.message}`);
         }
@@ -63,32 +81,18 @@ const Speaker = () => {
     return () => {
       playSpeakerRef.current = null;
       if (audioRef.current) {
-        audioRef.current.pause(); // Stop audio if component unmounts
-        audioRef.current.src = ''; // Clean up the audio source
+        audioRef.current.pause();
+        audioRef.current.src = '';
       }
     };
   }, [playSpeakerRef]);
 
-  useEffect(() => {
-    if (audioUrls.length > 0 && currentAudioIndex < audioUrls.length) {
-      audioRef.current = new Audio(audioUrls[currentAudioIndex]);
-
-      // Play current audio
-      audioRef.current.play();
-
-      // When the current audio ends, move to the next one
-      audioRef.current.onended = () => {
-        setCurrentAudioIndex((prevIndex) => prevIndex + 1);
-      };
-    }
-  }, [audioUrls, currentAudioIndex]);
-
-  // Handle cleanup of the audio object on unmount or index change
+  // Cleanup effect
   useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.src = ''; // Clean up the audio source
+        audioRef.current.src = '';
       }
     };
   }, []);

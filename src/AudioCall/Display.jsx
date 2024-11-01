@@ -5,6 +5,7 @@ import micOffIcon from '/src/assets/mic-off.svg';
 import hourglassIcon from '/src/assets/hourglass.svg';
 
 import Hexagon from '/src/components/Hexagon';
+import VideoHexagon from '/src/components/VideoHexagon';
 
 import './Display.scss';
 
@@ -23,7 +24,8 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, combi
 
     return (
         <div className='interview-container'>
-            <Hexagon pulsing={false} spinning={false} clickable={false}/>
+            <Hexagon pulsing={false} spinning={false} clickable={true} uniqueId={1}/>
+            <VideoHexagon pulsing={false} spinning={false} clickable={true} uniqueId={2}/>
             <div className='transcript-container' ref={transcriptRef}>
                 {combinedTranscript && combinedTranscript.map((segment, index) => (
                     <div key={index} className="text-segment">

@@ -8,58 +8,54 @@ const Listener = () => {
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState(null);
     const audioChunksRef = useRef([]);
-    const [responses, setResponses] = useState([]);
     const [error, setError] = useState(null);
     const intervalRef = useRef(null);
 
+    const orderedResponses = useRef([]);
+    const [wordsArray, setWordsArray] = useState([]);
+    const [lastEmptyResponse, setLastEmptyResponse] = useState(0);
+
     const TIMESLICE = 3000;
-    const PAUSE_THRESHOLD = 1.4
+    const PAUSE_THRESHOLD = 1.4;
 
     useEffect(() => {
-        const setupMediaRecorder = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const recorder = new MediaRecorder(stream, { timeslice: TIMESLICE }); // 1 second chunks
-                
-                recorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        audioChunksRef.current.push(event.data);
-                    }
-                };
-                
-                recorder.onstop = handleCompleteStopRecording;
-                setMediaRecorder(recorder);
-            } catch (err) {
-                console.error("Error setting up media recorder:", err);
-                setError("Failed to access microphone.");
-            }
-        };
-    
-        if (!mediaRecorder) {
-            setupMediaRecorder();
-        }
-    
         return () => {
+            // cleanup function to stop media recorder if it exists
             if (mediaRecorder) {
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
                 mediaRecorder.stop();
-                if (intervalRef.current) {
-                    clearInterval(intervalRef.current);
-                }
             }
         };
-    }, []);
-    
-    const handleStartRecording = () => {
-        if (mediaRecorder && mediaRecorder.state === 'inactive') {
+    }, [mediaRecorder]);
+
+    const handleStartRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const recorder = new MediaRecorder(stream, { timeslice: TIMESLICE }); // 3 seconds chunks
+            
+            recorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+            
+            recorder.onstop = handleTimesliceRecording;
+
             audioChunksRef.current = [];
-            mediaRecorder.start();
+            recorder.start();
+            setMediaRecorder(recorder);
             setIsRecording(true);
             console.log("Recording started");
+
+            // set up an interval to restart recording automatically
             intervalRef.current = setInterval(() => {
-                mediaRecorder.stop();
-                mediaRecorder.start();
+                recorder.stop();
+                recorder.start();
             }, TIMESLICE);
+
+        } catch (err) {
+            console.error("Error starting recording:", err);
+            setError("Failed to access microphone.");
         }
     };
 
@@ -72,10 +68,14 @@ const Listener = () => {
                 clearInterval(intervalRef.current);
             }
             sendCurrentAudio();
+
+            // reset mediaRecorder to null to allow new recording and clear audio chunks
+            setMediaRecorder(null);
+            audioChunksRef.current = [];
         }
     };
 
-    const handleCompleteStopRecording = async () => {
+    const handleTimesliceRecording = async () => {
         if (audioChunksRef.current.length > 0) {            
             await sendCurrentAudio();
         } else {
@@ -91,8 +91,6 @@ const Listener = () => {
             const arrayBuffer = await audioBlob.arrayBuffer();
             const decodedAudio = await audioContext.decodeAudioData(arrayBuffer);
 
-            // console.log("Sent audio:", decodedAudio);
-
             await sendAudio(audioBlob, decodedAudio.sampleRate);
             audioChunksRef.current = []; 
         }
@@ -100,11 +98,11 @@ const Listener = () => {
 
     const sendAudio = async (audioBlob, sampleRate = 22050) => {
         const reader = new FileReader();
-        const timestamp = new Date().toISOString(); // Unique timestamp for ordering
-    
+        const timestamp = new Date().toISOString(); // unique timestamp for ordering
+
         reader.onloadend = async () => {
             const base64Audio = reader.result.split(',')[1];
-    
+
             try {
                 const result = await axios.post(`${import.meta.env.VITE_API_URL}/getTextFromAudioBatch`, {
                     filename: 'recording.webm',
@@ -113,55 +111,46 @@ const Listener = () => {
                     languageCode: 'en-US',
                     fileaudio: base64Audio,
                 });
-    
+
                 const response = {
                     text: result?.data[0]?.text,
                     words: result?.data[0]?.words,
                     timestamp: timestamp,
                 };
-    
+
                 addOrderedResponse(response);
-    
                 setError(null);
             } catch (err) {
                 setError(err.message);
-                setResponses([]); // Clear responses on error
             }
         };
-    
+
         reader.readAsDataURL(audioBlob);
     };
-    
-    // Function to store responses in order and handle pauses
 
-    const orderedResponses = useRef([]);
-    const [wordsArray, setWordsArray] = useState([]);
-    const [lastEmptyResponse, setLastEmptyResponse] = useState(0);
 
     const addOrderedResponse = (newResponse) => {
-        // Insert new response in order by timestamp
+        // insert new response in order by timestamp
         orderedResponses.current = [...orderedResponses.current, newResponse].sort((a, b) => 
             new Date(a.timestamp) - new Date(b.timestamp)
         );
 
         const updatedResponses = orderedResponses.current;
 
-
-
-        // Flatten words from all responses into a single array
+        // flatten words from all responses into a single array
         const allWordsWithPauses = [];
 
         updatedResponses.forEach((response) => {
+            const responseTimestamp = new Date(response.timestamp).getTime() / 1000; // convert to seconds
+
             if (!response.words) {
-                setLastEmptyResponse(new Date(response.timestamp).getTime() / 1000 + 0.5 * TIMESLICE/1000);
-                return; // Skip if no words
+                // for word gap proccessing we need to know if the last response was empty
+                setLastEmptyResponse(responseTimestamp + TIMESLICE/1000);
+                return;
             }
 
-            // Convert response timestamp into seconds
-            const responseTimestamp = new Date(response.timestamp).getTime() / 1000; // Convert to seconds
-
             response.words.forEach((word) => {
-                // Create a new word object with updated start and end times
+                // create a new word object with global start and end times
                 const updatedWord = {
                     word: word.word,
                     start: parseFloat(word.start) + responseTimestamp,
@@ -169,8 +158,6 @@ const Listener = () => {
                 };
                 allWordsWithPauses.push(updatedWord);
             });
-
-
         });
 
         setWordsArray(allWordsWithPauses);

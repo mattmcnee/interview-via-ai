@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Hexagon.scss';
 
-const VideoHexagon = ({ size = 300, pulsing = false, spinning = false, clickable = false, uniqueId }) => {
+const VideoHexagon = ({ size = 300, pulsing = false, spinning = false, clickable = false, uniqueId, videoRef, videoOn, name }) => {
   const [rotation, setRotation] = useState(0);
-  const videoRef = useRef(null);
+  const [videoLoaded, setVideoLoaded] = useState(false); // State to track if video is loaded
 
   const handleClick = () => {
     if (clickable) {
@@ -25,33 +25,6 @@ const VideoHexagon = ({ size = 300, pulsing = false, spinning = false, clickable
     };
   }, [spinning]);
 
-  // Set up video stream
-  useEffect(() => {
-    const getCameraStream = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play(); // Play the video
-        }
-      } catch (err) {
-        console.error('Error accessing camera:', err);
-      }
-    };
-
-    getCameraStream();
-
-    return () => {
-      // Cleanup: Stop all video tracks when component unmounts
-      if (videoRef.current) {
-        const stream = videoRef.current.srcObject;
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
-        }
-      }
-    };
-  }, []);
-
   return (
     <div className={`hexagon-container`} style={{ width: size, height: size }}>
       <svg
@@ -69,18 +42,40 @@ const VideoHexagon = ({ size = 300, pulsing = false, spinning = false, clickable
         </defs>
 
         <foreignObject width="44" height="40" clipPath={`url(#shield-clip-${uniqueId})`}>
-          <video
-            ref={videoRef}
-            width="44"
-            height="40"
-            style={{
-              transition: 'transform 0.3s ease',
-              objectFit: 'cover',
-              width: '100%',
-              height: '100%',
-              transform: 'scaleX(-1)' // Mirror the video horizontally
-            }}
-          />
+          {videoOn ? (
+            <video
+              ref={videoRef}
+              width="44"
+              height="40"
+              style={{
+                transition: 'transform 0.3s ease',
+                objectFit: 'cover',
+                width: '100%',
+                height: '100%',
+                transform: 'scaleX(-1)', // Mirror the video horizontally
+                zIndex: 1,
+                backgroundColor: '#22223b',
+                cursor: 'pointer'
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '44px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              fontWeight: 'bold',
+              backgroundColor: '#22223b',
+              color: '#f7f7f7',
+              cursor: 'pointer',
+              zIndex: 5
+            }}>
+              {name ? name.charAt(0) : '@'}
+            </div>
+          )}
+
         </foreignObject>
       </svg>
     </div>
@@ -88,3 +83,4 @@ const VideoHexagon = ({ size = 300, pulsing = false, spinning = false, clickable
 };
 
 export default VideoHexagon;
+

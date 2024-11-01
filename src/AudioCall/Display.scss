@@ -7,6 +7,16 @@
     align-items: center;
     background-color: #f1f1f1;
 
+    .call-members{
+        display: flex;
+        flex: 1;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        padding-top: 50px;
+        gap: 50px
+    }
+
     .transcript-container {
         flex: 1;
         overflow-y: auto;

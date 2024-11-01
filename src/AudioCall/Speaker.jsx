@@ -128,7 +128,7 @@ const Speaker = () => {
 
   return (
     <div>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {/* {error && <p style={{ color: 'red' }}>{error}</p>} */}
     </div>
   );
 };

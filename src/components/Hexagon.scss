@@ -24,11 +24,33 @@
   
   .hexagon {
     width: 200px; // Default size, will be overridden in React
-    height: calc(200px * 0.866); // Aspect ratio for an equilateral hexagon
+    // height: calc(200px * 0.866); // Aspect ratio for an equilateral hexagon
     background-color: transparent;
     position: relative;
     margin: 0 auto;
-    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+
+    // clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+
+//     clip-path: polygon(
+//     23% 2%,   /* before n1 */
+//     23.6% 1.2%,  /* before n1 */
+//     24.2% 0.6%,  /* modified n1 */
+//     25.1% 0.2%,  /* after n1 */
+//     26% 0%,   /* after n1 */
+//     72.4% 0%,   /* before n2 */
+//     73.1% 0.1%,   /* before n2 */
+//     74.2% 0.4%,   /*modified n2 */
+//     75.5% 1.2%,   /*after n2 */
+//     76.3% 2%,   /*after n2 */
+//     100% 50%, /* n3 */
+//     75% 100%, /* n4 */
+//     25% 100%, /* n5 */
+//     0% 50%    /* n6 */
+// );
+
+
+
+
     transition: transform 0.3s ease;
   
     // To allow dynamic sizing
@@ -43,7 +65,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) rotate(0deg); // Rotate will be updated in React
+    // transform: translate(-50%, -50%) rotate(0deg); // Rotate will be updated in React
     transition: transform 0.3s ease;
   }
   

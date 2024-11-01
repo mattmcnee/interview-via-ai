@@ -11,6 +11,7 @@ import MicToText from './MicToText';
 import AudioCallPage from './AudioCall/AudioCallPage';
 
 import Speaker from './AudioCall/Speaker';
+import TextProcessor from './TextProcesser';
 
 function App() {
   return (
@@ -28,6 +29,8 @@ function App() {
         <Route path="/call" element={<AudioCallPage />} />
 
         {/* <Route path="/speech" element={<Speaker />} /> */}
+
+        <Route path="/text" element={<TextProcessor />} />
 
       </Routes>
     </Router>

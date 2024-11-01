@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAudioCall } from './AudioCallContext';
+import Display from './Display';
 
 const Listener = () => {
     const { setUserTranscript, setUserCurrentMessage, combinedTranscript, pushUserMessage } = useAudioCall();
@@ -222,22 +223,13 @@ const Listener = () => {
 
     return (
         <div>
-            <button onClick={handleStartRecording} disabled={isRecording}>
-                Start Recording
-            </button>
-            <button onClick={handleStopRecording} disabled={!isRecording}>
-                Stop Recording
-            </button>
-
-            <div>
-                {combinedTranscript && combinedTranscript.map((segment, index) => (
-                    <div key={index} className="text-segment">
-                        <p><strong>{segment.role}:</strong> {segment.text}</p>
-                    </div>
-                ))}
-            </div>
-
-            {error && <div>Error: {error}</div>}
+            <Display
+                isRecording={isRecording}
+                handleStartRecording={handleStartRecording}
+                handleStopRecording={handleStopRecording}
+                combinedTranscript={combinedTranscript}
+                error={error}
+            />
         </div>
     );
 };

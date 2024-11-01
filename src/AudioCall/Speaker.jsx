@@ -1,67 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAudioCall } from './AudioCallContext';
 
 const Speaker = () => {
-  const [textToSynthesize, setTextToSynthesize] = useState('');
-  const [audioUrl, setAudioUrl] = useState(null);
+  const [audioUrls, setAudioUrls] = useState([]);
   const [error, setError] = useState('');
+  const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
 
-  const handleInputChange = (e) => {
-    setTextToSynthesize(e.target.value);
-  };
+  const { playSpeakerRef } = useAudioCall();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setAudioUrl(null);
+  useEffect(() => {
+    playSpeakerRef.current = (transcript) => {
 
-    try {
-      const response = await fetch(`${import.meta.env.VITE_TACOTRON_URL}/generate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ text: textToSynthesize })
-      });
+      // Clear previous state
+      setError('');
+      setAudioUrls([]);
+      setCurrentAudioIndex(0);
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      // Split input text into sentences
+      const sentences = transcript.match(/[^.!?]+[.!?]/g) || [transcript];
+      const newAudioUrls = [];
 
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = "generated_audio.wav"; // Fallback filename
+      const fetchAudio = async () => {
+        try {
+          // Fetch audio for each sentence sequentially
+          for (const sentence of sentences) {
+            const response = await fetch(`${import.meta.env.VITE_TACOTRON_URL}/generate`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ text: sentence.trim() })
+            });
 
-      if (contentDisposition && contentDisposition.match(/filename="([^"]+)"/)) {
-        filename = contentDisposition.match(/filename="([^"]+)"/)[1];
-      }
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
 
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      setAudioUrl(audioUrl);
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            newAudioUrls.push(audioUrl);
 
-    } catch (err) {
-      setError(`Error: ${err.message}`);
+            // Start playing the first audio as soon as it arrives
+            if (newAudioUrls.length === 1) {
+              setAudioUrls(newAudioUrls);
+              setCurrentAudioIndex(0); // Start playback from the first audio
+            }
+          }
+
+          // Set remaining audio URLs once all are fetched
+          setAudioUrls(newAudioUrls);
+
+        } catch (err) {
+          setError(`Error: ${err.message}`);
+        }
+      };
+
+      fetchAudio();
+    };
+
+    return () => {
+      playSpeakerRef.current = null; // Clean up on unmount
+    };
+  }, [playSpeakerRef]);
+
+  useEffect(() => {
+    if (audioUrls.length > 0 && currentAudioIndex < audioUrls.length) {
+      const audio = new Audio(audioUrls[currentAudioIndex]);
+
+      // Play current audio and move to the next once it finishes
+      audio.play();
+      audio.onended = () => {
+        setCurrentAudioIndex((prevIndex) => prevIndex + 1);
+      };
     }
-  };
+  }, [audioUrls, currentAudioIndex]);
 
   return (
     <div>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={textToSynthesize}
-          onChange={handleInputChange}
-          placeholder="Enter text to synthesize"
-          required
-        />
-        <button type="submit">Submit</button>
-      </form>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {audioUrl && (
-        <audio controls>
-          <source src={audioUrl} type="audio/wav" />
-          Your browser does not support the audio tag.
-        </audio>
-      )}
     </div>
   );
 };

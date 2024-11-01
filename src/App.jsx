@@ -27,7 +27,7 @@ function App() {
         <Route path="/mic" element={<MicToText />} />
         <Route path="/call" element={<AudioCallPage />} />
 
-        <Route path="/speech" element={<Speaker />} />
+        {/* <Route path="/speech" element={<Speaker />} /> */}
 
       </Routes>
     </Router>

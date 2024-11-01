@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAudioCall } from './AudioCallContext';
 
 const Listener = () => {
-    const { setUserTranscript, setUserCurrentMessage, combinedTranscript } = useAudioCall();
+    const { setUserTranscript, setUserCurrentMessage, combinedTranscript, pushUserMessage } = useAudioCall();
 
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -182,7 +182,7 @@ const Listener = () => {
         console.log("Time:", time);
         if (sentence && !userSentences.current.includes(sentence)) {
             userSentences.current.push(sentence);
-            setUserCurrentMessage({sentence, time: time + 1});
+            pushUserMessage({sentence, time: time + 1});
         }
     };
 

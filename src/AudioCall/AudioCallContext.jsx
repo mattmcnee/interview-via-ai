@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const AudioCallContext = createContext();
 export const useAudioCall = () => {
@@ -10,12 +10,29 @@ export const AudioCallProvider = ({ children }) => {
     const [aiTranscript, setAiTranscript] = useState('');
     const [combinedTranscript, setCombinedTranscript] = useState('');
 
-
     const [userCurrentMessage, setUserCurrentMessage] = useState('');
 
+    const playSpeakerRef = useRef(null);
+    const messageResponseRef = useRef(null);
 
-    const pushUserMessage = (message) => {
-        console.log(`User message: ${message.text}`);
+    const callPlaySpeaker = (transcript) => {
+      if (playSpeakerRef.current) {
+        playSpeakerRef.current(transcript);
+      }
+    };
+
+    const callGenerateResponse = async (message) => {
+        if (messageResponseRef.current) {
+            return await messageResponseRef.current(message);
+        }
+      };
+
+    const pushUserMessage = async (message) => {
+        const responseMessage =  await callGenerateResponse(message);
+
+        setAiTranscript(prevTranscript => [...prevTranscript, { text: responseMessage, time: message.time, role: "ai" }]);
+
+        callPlaySpeaker(responseMessage);
     }
 
     useEffect(() => {
@@ -33,11 +50,13 @@ export const AudioCallProvider = ({ children }) => {
             userTranscript, 
             setUserTranscript, 
             userCurrentMessage, 
-            pushUserMessage, 
             setUserCurrentMessage, 
             aiTranscript, 
             setAiTranscript,
-            combinedTranscript
+            combinedTranscript,
+            playSpeakerRef,
+            messageResponseRef,
+            pushUserMessage
         }}>
             {children}
         </AudioCallContext.Provider>

@@ -10,27 +10,38 @@ const Speaker = () => {
 
   useEffect(() => {
     playSpeakerRef.current = (transcript) => {
-
-      // Clear previous state
       setError('');
       setAudioUrls([]);
       setCurrentAudioIndex(0);
 
-      // Split input text into sentences
+      // split input text into sentences by ".", "!", or "?"
       const sentences = transcript.match(/[^.!?]+[.!?]/g) || [transcript];
       const newAudioUrls = [];
 
-      const fetchAudio = async () => {
+      const fetchAudio = async (sentence) => {
+        // create a fetch request promise for the API
+        const fetchPromise = fetch(`${import.meta.env.VITE_TACOTRON_URL}/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ text: sentence.trim() })
+        });
+
+        // create a 5 second timeout promise
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Fetch timeout after 5 seconds')), 5000)
+        );
+
+        // use Promise.race to wait for either the fetch or the timeout
+        return Promise.race([fetchPromise, timeoutPromise]);
+      };
+
+      const getAudioUrls = async () => {
         try {
-          // Fetch audio for each sentence sequentially
+          // fetch audio for each sentence sequentially
           for (const sentence of sentences) {
-            const response = await fetch(`${import.meta.env.VITE_TACOTRON_URL}/generate`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({ text: sentence.trim() })
-            });
+            const response = await fetchAudio(sentence);
 
             if (!response.ok) {
               throw new Error('Network response was not ok');
@@ -40,14 +51,14 @@ const Speaker = () => {
             const audioUrl = URL.createObjectURL(audioBlob);
             newAudioUrls.push(audioUrl);
 
-            // Start playing the first audio as soon as it arrives
+            // start playing the first audio as soon as it arrives
             if (newAudioUrls.length === 1) {
               setAudioUrls(newAudioUrls);
-              setCurrentAudioIndex(0); // Start playback from the first audio
+              setCurrentAudioIndex(0);
             }
           }
 
-          // Set remaining audio URLs once all are fetched
+          // set remaining audio URLs once all are fetched
           setAudioUrls(newAudioUrls);
 
         } catch (err) {
@@ -55,11 +66,11 @@ const Speaker = () => {
         }
       };
 
-      fetchAudio();
+      getAudioUrls();
     };
 
     return () => {
-      playSpeakerRef.current = null; // Clean up on unmount
+      playSpeakerRef.current = null;
     };
   }, [playSpeakerRef]);
 
@@ -67,7 +78,7 @@ const Speaker = () => {
     if (audioUrls.length > 0 && currentAudioIndex < audioUrls.length) {
       const audio = new Audio(audioUrls[currentAudioIndex]);
 
-      // Play current audio and move to the next once it finishes
+      // play current audio and move to the next once it finishes
       audio.play();
       audio.onended = () => {
         setCurrentAudioIndex((prevIndex) => prevIndex + 1);

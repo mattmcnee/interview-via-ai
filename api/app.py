@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 import io
 import numpy as np
@@ -9,36 +9,36 @@ from setup_model import initialize_models
 from run_model import synthesize_text
 
 app = Flask(__name__)
+CORS(app)
 
-# Enable CORS for all routes
-CORS(app)  # This will allow all domains to access your API
-
-# Initialize models at startup
 print("Initializing models...")
 models = initialize_models()
 print("Server ready!")
 
-# Create directory for generated audio
 os.makedirs("generated_audio", exist_ok=True)
 
-@app.route('/generate', methods=['POST'])  # Endpoint for audio generation
+@app.route('/generate', methods=['POST'])
 def generate():
     try:
         data = request.get_json()
         if not data or 'text' not in data:
-            return {'error': 'No text provided'}, 400
+            return jsonify({'error': 'No text provided'}), 400
         
         text = data['text']
-        # Set show_graphs to False by default
-        show_graphs = False  
-        superres_strength = data.get('superres_strength', 5)
+        # Add all configuration options as optional parameters
+        config = {
+            'show_graphs': data.get('show_graphs', False),
+            'max_duration': data.get('max_duration', 20),
+            'stop_threshold': data.get('stop_threshold', 0.5),
+            'superres_strength': data.get('superres_strength', 4),
+            'use_pronunciation_dict': data.get('use_pronunciation_dict', True)
+        }
         
-        # Generate audio
-        audio, sample_rate, _ = synthesize_text(  # Ignore spectrograms
+        # Generate audio with all config options
+        audio, sample_rate, spectrograms = synthesize_text(
             text, 
             models,
-            show_graphs=show_graphs,
-            superres_strength=superres_strength
+            **config
         )
         
         # Save audio to BytesIO
@@ -52,16 +52,16 @@ def generate():
         filepath = os.path.join("generated_audio", filename)
         wavfile.write(filepath, sample_rate, audio)
         
-        # Return the audio file in the response
+        # Return the audio file directly
         return send_file(
             audio_buffer,
             mimetype='audio/wav',
             as_attachment=True,
             download_name=filename
         ), 200
-        
+
     except Exception as e:
-        return {'error': str(e)}, 500
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

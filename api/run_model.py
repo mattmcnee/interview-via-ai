@@ -38,7 +38,6 @@ def generate_spectrograms(mel_outputs_postnet, alignments):
     plt.imshow(alignments.float().data.cpu().numpy()[0].T, 
                aspect='auto', origin='lower', interpolation='none')
     
-    # Save plot to base64 string
     buf = io.BytesIO()
     plt.savefig(buf, format='png')
     plt.close()
@@ -46,28 +45,31 @@ def generate_spectrograms(mel_outputs_postnet, alignments):
     image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
     return image_base64
 
-def synthesize_text(text, models, show_graphs=True, superres_strength=5):
-    model = models['tacotron2'].to(torch.device("cuda"))  # Move to GPU
-    hifigan = models['hifigan'].to(torch.device("cuda"))  # Move to GPU
-    hifigan_sr = models['hifigan_sr'].to(torch.device("cuda"))  # Move to GPU
+def synthesize_text(text, models, show_graphs=True, max_duration=20, 
+                   stop_threshold=0.5, superres_strength=4, 
+                   use_pronunciation_dict=True):
+    # Get models from dictionary
+    model = models['tacotron2']
+    hifigan = models['hifigan']
+    hifigan_sr = models['hifigan_sr']
     h = models['h']
     h2 = models['h2']
-    denoiser = models['denoiser'].to(torch.device("cuda"))  # Move to GPU
-    denoiser_sr = models['denoiser_sr'].to(torch.device("cuda"))  # Move to GPU
+    denoiser = models['denoiser']
+    denoiser_sr = models['denoiser_sr']
+    pronunciation_dict = models['pronunciation_dict']
 
-    max_duration = 20
-    stop_threshold = 0.5
-
+    # Apply configuration
     model.decoder.max_decoder_steps = max_duration * 80
     model.decoder.gate_threshold = stop_threshold
     
-    if not text.endswith(";"):
+    # Apply pronunciation dictionary if enabled
+    if use_pronunciation_dict:
+        text = ARPA(text, pronunciation_dict)
+    elif not text.endswith(";"):
         text = text + ";"
     
     with torch.no_grad():
         sequence = np.array(text_to_sequence(text, ['english_cleaners']))[None, :]
-
-        # Move sequence to GPU
         sequence = torch.autograd.Variable(torch.from_numpy(sequence)).long().to(torch.device("cuda"))
 
         mel_outputs, mel_outputs_postnet, _, alignments = model.inference(sequence)
@@ -76,7 +78,6 @@ def synthesize_text(text, models, show_graphs=True, superres_strength=5):
         if show_graphs:
             spectrograms_base64 = generate_spectrograms(mel_outputs_postnet, alignments)
 
-        # Generate audio with HiFi-GAN
         y_g_hat = hifigan(mel_outputs_postnet.float())
         audio = y_g_hat.squeeze() * MAX_WAV_VALUE
         audio_denoised = denoiser(audio.view(1, -1), strength=35)[:, 0]
@@ -97,7 +98,7 @@ def synthesize_text(text, models, show_graphs=True, superres_strength=5):
 
         # Super-resolution
         wave = wave / MAX_WAV_VALUE
-        wave = torch.FloatTensor(wave).to(torch.device("cuda"))  # Move to GPU
+        wave = torch.FloatTensor(wave).to(torch.device("cuda"))
         new_mel = mel_spectrogram(
             wave.unsqueeze(0),
             h2.n_fft,
@@ -107,12 +108,12 @@ def synthesize_text(text, models, show_graphs=True, superres_strength=5):
             h2.win_size,
             h2.fmin,
             h2.fmax,
-        ).to(torch.device("cuda"))  # Move to GPU
+        )
         y_g_hat2 = hifigan_sr(new_mel)
         audio2 = y_g_hat2.squeeze() * MAX_WAV_VALUE
         audio2_denoised = denoiser_sr(audio2.view(1, -1), strength=35)[:, 0]
 
-        # Apply high-pass filter and mix
+        # High-pass filter and mix
         audio2_denoised = audio2_denoised.cpu().numpy().reshape(-1)
         b = scipy.signal.firwin(
             101, cutoff=10500, fs=h2.sampling_rate, pass_zero=False

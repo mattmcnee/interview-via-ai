@@ -4,7 +4,7 @@ import { useAudioCall } from './AudioCallContext';
 import Display from './Display';
 
 const Listener = () => {
-    const { setUserTranscript, setUserCurrentMessage, combinedTranscript, pushUserMessage } = useAudioCall();
+    const { setUserTranscript, pushUserMessage } = useAudioCall();
 
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -233,7 +233,6 @@ const Listener = () => {
                 isRecording={isRecording}
                 handleStartRecording={handleStartRecording}
                 handleStopRecording={handleStopRecording}
-                combinedTranscript={combinedTranscript}
                 error={error}
             />
         </div>

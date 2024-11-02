@@ -11,12 +11,16 @@ import VideoHexagon from '/src/components/VideoHexagon';
 
 import './Display.scss';
 
-const Display = ({ handleStartRecording, handleStopRecording, isRecording, combinedTranscript, error }) => {
+import { useAudioCall } from './AudioCallContext';
+
+const Display = ({ handleStartRecording, handleStopRecording, isRecording, error }) => {
     const transcriptRef = useRef(null);
     const [prevTranscript, setPrevTranscript] = useState([]);
     const [videoOn, setVideoOn] = useState(false);
     const videoRef = useRef(null);
     const streamRef = useRef(null); // Add a ref to keep track of the video stream
+
+    const { timer, combinedTranscript } = useAudioCall();
 
     useEffect(() => {
         if (combinedTranscript.length !== prevTranscript.length) {
@@ -75,6 +79,15 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, combi
         }
     };
 
+    const formatTime = (seconds) => {
+        // Round to nearest 10 seconds
+        seconds = Math.round(seconds / 10) * 10;
+        
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    };
+
     return (
         <div className='interview-container'>
             <div className='call-members'>
@@ -114,9 +127,9 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, combi
                     </button>
                 )}
 
-                <button onClick={() => alert("Time")} className="mic-button">
+                <button className="mic-button">
                     <img src={hourglassIcon} alt="Check Time" />
-                    <div className="button-text">2:17 Remaining</div>
+                    <div className="button-text">{formatTime(timer)} Remaining</div>
                 </button>
 
                 <button onClick={() => alert("Exit meeting")} className="mic-button">
@@ -126,6 +139,7 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, combi
             </div>
         </div>
     );
-}
+};
 
 export default Display;
+

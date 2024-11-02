@@ -8,9 +8,9 @@ import SpeechToText from './SpeechToText';
 import AudioStreamer from './AudioStreamer';
 import AudioTranscriber from './AudioTranscriber';
 import MicToText from './MicToText';
-import AudioCallPage from './AudioCall/AudioCallPage';
+import AudioCallPage from './call/AudioCallPage';
 
-import Speaker from './AudioCall/Speaker';
+import Speaker from './call/Speaker';
 import TextProcessor from './TextProcesser';
 
 function App() {

@@ -27,6 +27,24 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, combi
         }
     }, [combinedTranscript]);
 
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden && videoOn) {
+                stopVideo();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            // Cleanup: Stop all video tracks when component unmounts
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+            }
+        };
+    }, [videoOn]);
+
     // Set up video stream
     const getCameraStream = async () => {
         try {
@@ -56,15 +74,6 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, combi
             videoRef.current.srcObject = null; // Clear the video source
         }
     };
-
-    useEffect(() => {
-        return () => {
-            // Cleanup: Stop all video tracks when component unmounts
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach(track => track.stop());
-            }
-        };
-    }, []);
 
     return (
         <div className='interview-container'>
@@ -115,8 +124,6 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, combi
                     <div className="button-text">Leave</div>
                 </button>
             </div>
-{/* 
-            {error && <div>Error: {error}</div>} */}
         </div>
     );
 }

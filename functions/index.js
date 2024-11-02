@@ -6,7 +6,7 @@ const axios = require('axios');
 const Pinecone = require('@pinecone-database/pinecone').Pinecone;
 const { SpeechClient } = require('@google-cloud/speech');
 const { Buffer } = require('buffer');
-const fs = require('fs');
+const { InstancesClient } = require('@google-cloud/compute').v1;
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -17,41 +17,65 @@ const pc = new Pinecone({
 
 const openaiApiKey = functions.config().openai.api_key;
 
-// Initialize CORS middleware
+// currently allowing requests from all origins
 const corsHandler = cors({ origin: true });
 
-// exports.textCompletionOpenAi = functions.https.onRequest((req, res) => {
-//     corsHandler(req, res, async () => {
-//         try {
-//             const { prompt } = req.body; // Assume you're sending a prompt in the request body
+exports.startVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
+    corsHandler(req, res, async () => {
+        try {
+            // Manually instantiate the Compute client with service account credentials
+            const serviceAccount = JSON.parse(Buffer.from(process.env.VM_SERVICE_ACCOUNT, 'base64').toString());
+            const computeClient = new InstancesClient({
+                credentials: serviceAccount,
+            });
 
-//             // Initialize OpenAI client with the API key
-//             const openai = new OpenAI({
-//                 apiKey: openaiApiKey, // Use the API key from Firebase config
-//             });
+            // Configuration variables
+            const projectId = functions.config().vm.project;
+            const zone = functions.config().vm.zone;
+            const instanceName = functions.config().vm.id;
 
-//             // Create a completion using the OpenAI API
-//             const completion = await openai.chat.completions.create({
-//                 model: "gpt-4", // Use the correct model name
-//                 messages: [
-//                     { "role": "user", "content": prompt } // Use the prompt from the request
-//                 ]
-//             });
+            // Get the VM instance
+            const [metadata] = await computeClient.get({
+                project: projectId,
+                zone: zone,
+                instance: instanceName,
+            });
+            const status = metadata.status;
 
-//             // Send the response back to the client
-//             res.status(200).send(completion);
-//         } catch (error) {
-//             console.error('Error calling OpenAI API:', error);
-//             res.status(500).send('Error calling OpenAI API');
-//         }
-//     });
-// });
+            // Only start if the VM is stopped
+            if (status === 'TERMINATED') {
+                const [operation] = await computeClient.start({
+                    project: projectId,
+                    zone: zone,
+                    instance: instanceName,
+                });
 
+                res.json({
+                    success: true,
+                    message: `VM ${instanceName} is starting up`,
+                    status: 'STARTING'
+                });
+            } else {
+                res.json({
+                    success: true,
+                    message: `VM ${instanceName} is already running`,
+                    status: status
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    });
+});
 
 exports.getEmbedding = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const { inputText } = req.body; // Assume you're sending the text in the request body
+            const { inputText } = req.body;
 
             // Step 1: Make a POST request to OpenAI embeddings endpoint
             const response = await axios.post(

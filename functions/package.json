@@ -13,6 +13,7 @@
   },
   "main": "index.js",
   "dependencies": {
+    "@google-cloud/compute": "^4.7.0",
     "@google-cloud/speech": "^6.7.0",
     "@pinecone-database/pinecone": "^3.0.3",
     "axios": "^1.7.7",

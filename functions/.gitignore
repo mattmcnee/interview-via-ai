@@ -1,4 +1,5 @@
 node_modules/
 *.local
 *key.json
+*key.txt
 .env

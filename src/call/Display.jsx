@@ -20,7 +20,7 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, error
     const videoRef = useRef(null);
     const streamRef = useRef(null); // Add a ref to keep track of the video stream
 
-    const { timer, combinedTranscript } = useAudioCall();
+    const { timer, combinedTranscript, setMeetingState } = useAudioCall();
 
     useEffect(() => {
         if (combinedTranscript.length !== prevTranscript.length) {
@@ -132,7 +132,7 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, error
                     <div className="button-text">{formatTime(timer)} Remaining</div>
                 </button>
 
-                <button onClick={() => alert("Exit meeting")} className="mic-button">
+                <button onClick={() => setMeetingState("recap")} className="mic-button">
                     <img src={exitIcon} alt="Exit meeting" />
                     <div className="button-text">Leave</div>
                 </button>

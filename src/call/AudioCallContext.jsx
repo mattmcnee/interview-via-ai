@@ -5,7 +5,7 @@ export const useAudioCall = () => {
     return useContext(AudioCallContext);
 };
 
-export const AudioCallProvider = ({ children }) => {
+export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, children }) => {
     const [userTranscript, setUserTranscript] = useState('');
     const [aiTranscript, setAiTranscript] = useState('');
     const [combinedTranscript, setCombinedTranscript] = useState('');
@@ -37,6 +37,7 @@ export const AudioCallProvider = ({ children }) => {
         // Combine and sort the transcripts by time
         const combinedTranscript = [...userTranscript, ...aiTranscript].sort((a, b) => a.time - b.time);
         setCombinedTranscript(combinedTranscript);
+        setSavedTranscript(combinedTranscript);
     }, [userTranscript, aiTranscript]);
 
     useEffect(() => {
@@ -61,7 +62,8 @@ export const AudioCallProvider = ({ children }) => {
             playSpeakerRef,
             messageResponseRef,
             pushUserMessage,
-            timer
+            timer,
+            setMeetingState
         }}>
             {children}
         </AudioCallContext.Provider>

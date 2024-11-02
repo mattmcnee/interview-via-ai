@@ -19,7 +19,7 @@
     "axios": "^1.7.7",
     "buffer": "^6.0.3",
     "firebase-admin": "^12.1.0",
-    "firebase-functions": "^5.0.0",
+    "firebase-functions": "^6.1.0",
     "openai": "^4.68.2"
   },
   "devDependencies": {

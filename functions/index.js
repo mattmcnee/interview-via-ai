@@ -1,4 +1,4 @@
-const functions = require('firebase-functions');
+const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
 const cors = require('cors');
 const OpenAI = require('openai');
@@ -18,7 +18,9 @@ const pc = new Pinecone({
 const openaiApiKey = functions.config().openai.api_key;
 
 // currently allowing requests from all origins
-const corsHandler = cors({ origin: true });
+const corsHandler = cors({
+    origin: true,
+});
 
 exports.startVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
@@ -62,6 +64,44 @@ exports.startVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.o
                     status: status
                 });
             }
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    });
+});
+
+exports.checkVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
+    corsHandler(req, res, async () => {
+        try {
+            // Manually instantiate the Compute client with service account credentials
+            const serviceAccount = JSON.parse(Buffer.from(process.env.VM_SERVICE_ACCOUNT, 'base64').toString());
+            const computeClient = new InstancesClient({
+                credentials: serviceAccount,
+            });
+
+            // Configuration variables
+            const projectId = functions.config().vm.project;
+            const zone = functions.config().vm.zone;
+            const instanceName = functions.config().vm.id;
+
+            // Get the VM instance
+            const [metadata] = await computeClient.get({
+                project: projectId,
+                zone: zone,
+                instance: instanceName,
+            });
+            const status = metadata.status;
+
+            // Respond with the current status of the VM
+            res.json({
+                success: true,
+                message: `VM ${instanceName} status checked successfully`,
+                status: status
+            });
         } catch (error) {
             console.error('Error:', error);
             res.status(500).json({

@@ -5,7 +5,7 @@ export const useAudioCall = () => {
     return useContext(AudioCallContext);
 };
 
-export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, children }) => {
+export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, ttsApiPath, children }) => {
     const [userTranscript, setUserTranscript] = useState('');
     const [aiTranscript, setAiTranscript] = useState('');
     const [combinedTranscript, setCombinedTranscript] = useState('');
@@ -63,7 +63,8 @@ export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, childre
             messageResponseRef,
             pushUserMessage,
             timer,
-            setMeetingState
+            setMeetingState,
+            ttsApiPath
         }}>
             {children}
         </AudioCallContext.Provider>

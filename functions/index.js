@@ -55,13 +55,20 @@ exports.startVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.o
                 res.json({
                     success: true,
                     message: `VM ${instanceName} is starting up`,
-                    status: 'STARTING'
+                    status: 'STARTING',
+                    externalIp: 'blank'
                 });
             } else {
+                const networkInterfaces = metadata.networkInterfaces || [];
+                const externalIp = networkInterfaces.length > 0 && networkInterfaces[0].accessConfigs
+                    ? networkInterfaces[0].accessConfigs[0].natIP
+                    : "blank";
+
                 res.json({
                     success: true,
                     message: `VM ${instanceName} is already running`,
-                    status: status
+                    status: status,
+                    externalIp: externalIp
                 });
             }
         } catch (error) {
@@ -96,11 +103,17 @@ exports.checkVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.o
             });
             const status = metadata.status;
 
+            const networkInterfaces = metadata.networkInterfaces || [];
+            const externalIp = networkInterfaces.length > 0 && networkInterfaces[0].accessConfigs
+                ? networkInterfaces[0].accessConfigs[0].natIP
+                : "blank";
+
             // Respond with the current status of the VM
             res.json({
                 success: true,
                 message: `VM ${instanceName} status checked successfully`,
-                status: status
+                status: status,
+                externalIp: externalIp
             });
         } catch (error) {
             console.error('Error:', error);
@@ -155,7 +168,6 @@ exports.checkFlask = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).http
         }
     });
 });
-
 
 exports.getEmbedding = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {

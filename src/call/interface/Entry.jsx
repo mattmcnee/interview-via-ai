@@ -6,7 +6,7 @@ const Entry = ({ setMeetingState }) => {
 
     const fetchExternalIp = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/checkFlask`);
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/checkVM`);
             setExternalIp(response.data.externalIp);
         } catch (error) {
             console.error("Error fetching external IP:", error);

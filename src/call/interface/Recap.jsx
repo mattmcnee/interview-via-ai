@@ -7,7 +7,7 @@ const Recap = ({ savedTranscript, setMeetingState }) => {
             <p>Here is the summary of your audio call:</p>
             <ul>
                 {savedTranscript.map((transcript, index) => (
-                    <li key={index}>{transcript}</li>
+                    <li key={index}>{transcript.role}: {transcript.text}</li>
                 ))}
             </ul>
             <button onClick={() => setMeetingState('entry')}>Start New Meeting</button>

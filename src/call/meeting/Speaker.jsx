@@ -7,7 +7,7 @@ const Speaker = () => {
   const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
   const audioRef = useRef(null);
   const isPlayingRef = useRef(false);
-  const { playSpeakerRef, setAiTranscript } = useAudioCall();
+  const { playSpeakerRef, setAiTranscript, ttsApiPath } = useAudioCall();
 
   const cleanText = (text) => text.replace(/["“”‘’]/g, '').trimEnd();
 
@@ -104,7 +104,7 @@ const Speaker = () => {
       console.log("Sentences:", sentences);
 
       const fetchAudio = async (sentence) => {
-        const fetchPromise = fetch(`${import.meta.env.VITE_TACOTRON_URL}/generate`, {
+        const fetchPromise = fetch(`${ttsApiPath}/generate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: processTextForTTS(sentence).trim() })

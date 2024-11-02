@@ -10,6 +10,7 @@ import Recap from './interface/Recap';
 const AudioCallPage = () => {
   const [meetingState, setMeetingState] = useState('entry');
   const [savedTranscript, setSavedTranscript] = useState([]);
+  const [ttsApiPath, setTtsApiPath] = useState(''); // Added state for ttsApiPath
 
   return (
     <>
@@ -18,11 +19,11 @@ const AudioCallPage = () => {
       )}
 
       {meetingState === 'loading' && (
-        <Loading setMeetingState={setMeetingState} />
+        <Loading setMeetingState={setMeetingState} ttsApiPath={ttsApiPath} setTtsApiPath={setTtsApiPath}/>
       )}
 
       {meetingState === 'meeting' && (
-        <AudioCallProvider setMeetingState={setMeetingState} setSavedTranscript={setSavedTranscript}>
+        <AudioCallProvider setMeetingState={setMeetingState} setSavedTranscript={setSavedTranscript} ttsApiPath={ttsApiPath}>
           <Listener />
           <Responder />
           <Speaker />

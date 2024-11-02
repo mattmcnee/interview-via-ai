@@ -19,17 +19,33 @@ const Listener = () => {
     const TIMESLICE = 3000;
     const PAUSE_THRESHOLD = 1.4;
 
+    // detect tab visibility to stop recording if tab is inactive
     useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden && isRecording) {
+                handleStopRecording();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
         return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
             // cleanup function to stop media recorder if it exists
             if (mediaRecorder) {
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
                 mediaRecorder.stop();
             }
         };
-    }, [mediaRecorder]);
+    }, [mediaRecorder, isRecording]);
 
     const handleStartRecording = async () => {
+        // don't start recording if the tab is not visible
+        if (document.hidden) {
+            setError("Cannot start recording while tab is inactive");
+            return;
+        }
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const recorder = new MediaRecorder(stream, { timeslice: TIMESLICE }); // 3 seconds chunks
@@ -70,12 +86,16 @@ const Listener = () => {
             }
             sendCurrentAudio();
 
+            // Stop all tracks in the stream
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+
             // reset mediaRecorder to null to allow new recording and clear audio chunks
             setMediaRecorder(null);
             audioChunksRef.current = [];
         }
     };
 
+    // Rest of the code remains the same...
     const handleTimesliceRecording = async () => {
         if (audioChunksRef.current.length > 0) {            
             await sendCurrentAudio();
@@ -129,29 +149,23 @@ const Listener = () => {
         reader.readAsDataURL(audioBlob);
     };
 
-
     const addOrderedResponse = (newResponse) => {
-        // insert new response in order by timestamp
         orderedResponses.current = [...orderedResponses.current, newResponse].sort((a, b) => 
             new Date(a.timestamp) - new Date(b.timestamp)
         );
 
         const updatedResponses = orderedResponses.current;
-
-        // flatten words from all responses into a single array
         const allWordsWithPauses = [];
 
         updatedResponses.forEach((response) => {
-            const responseTimestamp = new Date(response.timestamp).getTime() / 1000; // convert to seconds
+            const responseTimestamp = new Date(response.timestamp).getTime() / 1000;
 
             if (!response.words) {
-                // for word gap proccessing we need to know if the last response was empty
                 setLastEmptyResponse(responseTimestamp + TIMESLICE/1000);
                 return;
             }
 
             response.words.forEach((word) => {
-                // create a new word object with global start and end times
                 const updatedWord = {
                     word: word.word,
                     start: parseFloat(word.start) + responseTimestamp,
@@ -176,7 +190,6 @@ const Listener = () => {
 
     const capitalizeAndTrim = (str) => 
         str ? str.trim().charAt(0).toUpperCase() + str.trim().slice(1) : str;
-      
 
     useEffect(() => {
         let resultString = '';
@@ -186,16 +199,12 @@ const Listener = () => {
             const endTime = wordObj.end;
             const nextWordObj = wordsArray[index + 1];
     
-            // Add the current word to the result string
             resultString += wordObj.word + ' ';
             transcriptString += wordObj.word + ' ';
     
-            // If there's a next word, calculate the gap
             if (nextWordObj) {
                 const gap = nextWordObj.start - endTime;
-                // If the gap is more than 1.4 seconds, add a full stop
                 if (gap > 1.4) {
-                    // Add resultString to userSentences if not already there
                     addSentenceIfUnique(resultString.trim(), endTime);
                     transcript.push({text:transcriptString.trim(), time: endTime, role: "user"});
 
@@ -206,13 +215,10 @@ const Listener = () => {
         });
     
         resultString = resultString.trim();
-    
-        // Check if the end of the last word is more than 1.4 seconds before the current time
         
         if (wordsArray.length > 0) {
             const lastWordEndTime = wordsArray[wordsArray.length - 1].end;
             if (lastEmptyResponse - lastWordEndTime > 1.4) {
-                // Add resultString to userSentences if not already there
                 addSentenceIfUnique(resultString, lastWordEndTime);
             }
             transcript.push({text:capitalizeAndTrim(transcriptString), time: lastWordEndTime, role: "user"});

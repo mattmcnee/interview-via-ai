@@ -10,7 +10,7 @@ import AudioTranscriber from './AudioTranscriber';
 import MicToText from './MicToText';
 import AudioCallPage from './call/AudioCallPage';
 
-import Speaker from './call/Speaker';
+import Speaker from './call/meeting/Speaker';
 import TextProcessor from './TextProcesser';
 
 function App() {

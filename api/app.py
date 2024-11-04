@@ -25,7 +25,7 @@ def generate():
             return jsonify({'error': 'No text provided'}), 400
         
         text = data['text']
-        # Add all configuration options as optional parameters
+        # configure model
         config = {
             'show_graphs': data.get('show_graphs', False),
             'max_duration': data.get('max_duration', 20),
@@ -34,25 +34,21 @@ def generate():
             'use_pronunciation_dict': data.get('use_pronunciation_dict', True)
         }
         
-        # Generate audio with all config options
+        # generate audio
         audio, sample_rate, spectrograms = synthesize_text(
             text, 
             models,
             **config
         )
         
-        # Save audio to BytesIO
+        # save audio to BytesIO
         audio_buffer = io.BytesIO()
         wavfile.write(audio_buffer, sample_rate, audio)
         audio_buffer.seek(0)
         
-        # Save to file (optional)
+	# return audio file as response
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         filename = f"tts_{timestamp}.wav"
-        filepath = os.path.join("generated_audio", filename)
-        wavfile.write(filepath, sample_rate, audio)
-        
-        # Return the audio file directly
         return send_file(
             audio_buffer,
             mimetype='audio/wav',

@@ -29,7 +29,6 @@ sudo apt-get install -y python3-venv python3-pip wget git tree
 
 mkdir tts_project
 cd tts_project
-
 ```
 
 ### Virtual environment
@@ -39,7 +38,6 @@ You'll need to setup a virtual environment to manage the python packages.
 ```
 python3 -m venv venv
 source venv/bin/activate
-
 ```
 
 ### Pip installs
@@ -60,7 +58,6 @@ pip install inflect
 pip install tensorflow
 pip install flask
 pip install flask_cors
-
 ```
 
 ### Clone required repositories

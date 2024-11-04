@@ -82,11 +82,36 @@ wget https://github.com/justinjohn0306/FakeYou-Tacotron2-Notebook/releases/downl
 
 ### Upload Tacotron 2 model
 
-Upload your finetuned model to the VM (this may take some time). Commands are shown for a model named "res-30".
+Upload your finetuned model to the VM (this may take some time) and move it to the project directory. Commands are shown to move a model named "res-30".
 
 ```
-# Upload Tacotron 2 model and move from home directory to 
 cd ..
 mv res-30 ~/tts_project/
 cd tts_project
 ```
+
+### Startup Script
+Add this to the automation section of the VM Instance to make the server start up automatically when the machine starts.
+
+```
+cd /home/mattmwebdev/tts_project
+source venv/bin/activate
+export FLASK_APP=app.py
+flask run --host=0.0.0.0 --port=5000
+```
+
+You can check if this is running.
+```
+ps aux | grep 'flask run'
+```
+Or you can cancel it.
+```
+sudo pkill -f 'flask run'
+```
+
+## Useful commands
+
+If you're less used to Linux, here are some commands that may be useful.
+
+- Run a python file: `python3 app.py`
+- Get full file path: `realpath myfile.txt`

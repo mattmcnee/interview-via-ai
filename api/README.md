@@ -15,6 +15,9 @@ Hosts the Tacotron 2 model and creates speech from provided text using it. Requi
 ## Setup
 This is provided as an overall guide and should not be considered an exhaustive list of every setup requirement.
 
+### Aquiring a GPU
+By default, a Google Cloud Account has a GPU quota of 0. You will need to apply for this to be increased to 1. There is a GPU shortage so change the region you're provisioning one in until you find one with GPUs available.
+
 ### Cuda (Nvidia Drivers)
 
 Cuda is needed for this code to run on the GPU. Google provides a version of Debian with Cuda installed, but this has a minimum disk space of 50GB. This code comfortably fits within a 28GB disk so if you're comfortable with Linux it's more cost effective to install it yourself.

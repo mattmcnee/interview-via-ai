@@ -1,4 +1,27 @@
-### Setup
+# TTS API - Google VM Instance
+
+Hosts the Tacotron 2 model and creates speech from provided text using it. Requires a GPU for realtime inference.
+
+## Details
+- Machine Type: n1-standard-1
+- GPUs: 1 x NVIDIA T4
+- OS: Debian GNU/Linux 12 (bookworm)
+- Disk Space: 28GB Disk 
+
+## Approximate Cost
+- £2.10 per month (persistent disk space)
+- £0.32 per hour (when running)
+
+## Setup
+This is provided as an overall guide and should not be considered an exhaustive list of every setup requirement.
+
+### Cuda (Nvidia Drivers)
+
+Cuda is needed for this code to run on the GPU. Google provides a version of Debian with Cuda installed, but this has a minimum disk space of 50GB. This code comfortably fits within a 28GB disk so if you're comfortable with Linux it's more cost effective to install it yourself.
+
+### Project directory
+
+Update packages and create the project directory
 
 ```
 sudo apt-get update
@@ -7,15 +30,22 @@ sudo apt-get install -y python3-venv python3-pip wget git tree
 mkdir tts_project
 cd tts_project
 
-# Create Python virtual environment and activate it
+```
+
+### Virtual environment
+
+You'll need to setup a virtual environment to manage the python packages.
+
+```
 python3 -m venv venv
 source venv/bin/activate
 
-# Clone repositories
-git clone https://github.com/justinjohn0306/TTS-TT2.git TTS_TT2
-git clone https://github.com/justinjohn0306/hifi-gan.git hifi_gan
+```
 
-# Install all required Python packages
+### Pip installs
+Some of these packages are quite large, hence the need for significant disk space.
+
+```
 pip install --upgrade pip
 pip install tqdm
 pip install resampy
@@ -31,6 +61,17 @@ pip install tensorflow
 pip install flask
 pip install flask_cors
 
+```
+
+### Clone required repositories
+
+This project builds on functionality provided by [justinjohn0306](https://github.com/justinjohn0306) and requires a local copy of certain Git repositories.
+
+```
+# Clone repositories
+git clone https://github.com/justinjohn0306/TTS-TT2.git TTS_TT2
+git clone https://github.com/justinjohn0306/hifi-gan.git hifi_gan
+
 # Create models directory and download HiFi-GAN models
 mkdir -p models
 cd models
@@ -40,44 +81,15 @@ cd ..
 
 # Download pronunciation dictionary
 wget https://github.com/justinjohn0306/FakeYou-Tacotron2-Notebook/releases/download/CMU_dict/merged.dict.txt
+```
 
-# Create directory for generated audio
-mkdir generated_audio
+### Upload Tacotron 2 model
 
+Upload your finetuned model to the VM (this may take some time). Commands are shown for a model named "res-30".
+
+```
 # Upload Tacotron 2 model and move from home directory to 
 cd ..
 mv res-30 ~/tts_project/
 cd tts_project
-
-# Check directory structure
-tree -L 1
-```
-
-
-### Example PowerShell command to CPU only VM instance
-
-```
-# Specify the text to synthesize
-$textToSynthesize = '{"text": "This is a full text of the C P U powered API"}' 
-
-# Make the POST request and get the response
-$response = Invoke-WebRequest -Uri "http://<External IP>:5000/generate" -Method Post -ContentType "application/json" -Body $textToSynthesize
-
-# Get the filename from the Content-Disposition header
-$contentDisposition = $response.Headers['Content-Disposition']
-if ($contentDisposition -match 'filename="([^"]+)"') {
-    $filename = $matches[1]
-} else {
-    # Fallback filename if not found
-    $filename = "generated_audio.wav"
-}
-
-# Get the path to the Downloads folder
-$downloadsPath = [System.IO.Path]::Combine($env:USERPROFILE, "Downloads")
-$filePath = Join-Path -Path $downloadsPath -ChildPath $filename
-
-# Save the file to the Downloads folder as bytes
-[System.IO.File]::WriteAllBytes($filePath, $response.Content)
-
-Write-Host "File saved to $filePath"
 ```

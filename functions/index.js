@@ -271,7 +271,7 @@ exports.upsertEmbedding = functions.https.onRequest((req, res) => {
     });
 });
 
-exports.getSimilarDocuments = functions.https.onRequest((req, res) => {
+exports.getSimilarDocuments = functions.runWith({ memory: "512MB" }).https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
       try {
 

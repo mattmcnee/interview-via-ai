@@ -120,7 +120,7 @@ If you're less used to Linux, here are some commands that may be useful.
 ```
 python3 app.py
 ```
-- Get full file path: 
+- Get full file path (i.e. App.py): 
 ```
-realpath myfile.txt
+realpath App.py
 ```

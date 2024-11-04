@@ -17,6 +17,11 @@ print("Server ready!")
 
 os.makedirs("generated_audio", exist_ok=True)
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    # check if the API is active
+    return jsonify({'status': 'API is active'}), 200
+
 @app.route('/generate', methods=['POST'])
 def generate():
     try:
@@ -46,7 +51,7 @@ def generate():
         wavfile.write(audio_buffer, sample_rate, audio)
         audio_buffer.seek(0)
         
-	# return audio file as response
+        # return audio file as response
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         filename = f"tts_{timestamp}.wav"
         return send_file(

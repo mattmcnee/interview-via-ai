@@ -113,5 +113,11 @@ sudo pkill -f 'flask run'
 
 If you're less used to Linux, here are some commands that may be useful.
 
-- Run a python file: `python3 app.py`
-- Get full file path: `realpath myfile.txt`
+- Run a python file: 
+```
+python3 app.py
+```
+- Get full file path: 
+```
+realpath myfile.txt
+```

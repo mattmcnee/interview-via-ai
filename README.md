@@ -1,8 +1,10 @@
-# React + Vite
+# Interview Via AI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is formed of three main systems:
 
-Currently, two official plugins are available:
+- [A TTS API hosted on a Google VM Instance](https://github.com/mattmcnee/interview-me-ai/tree/main/api)
+- [A React frontend built using Vite and hosted on Firebase](https://github.com/mattmcnee/interview-me-ai/tree/main/src)
+- [A collection of Firebase Functions](https://github.com/mattmcnee/interview-me-ai/tree/main/functions)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+

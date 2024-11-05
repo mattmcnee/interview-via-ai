@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import headshot from '/src/assets/headshot2.jpg';
 import './Hexagon.scss';
 
-const Hexagon = ({ size = 300, pulsing = false, spinning = false, clickable = false, uniqueId }) => {
+const ImageHexagon = ({ size = 300, pulsing = false, spinning = false, clickable = false, uniqueId }) => {
   const [rotation, setRotation] = useState(0);
 
   const handleClick = () => {
@@ -55,4 +55,4 @@ const Hexagon = ({ size = 300, pulsing = false, spinning = false, clickable = fa
   );
 };
 
-export default Hexagon;
+export default ImageHexagon;

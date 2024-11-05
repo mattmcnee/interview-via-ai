@@ -6,7 +6,7 @@ import hourglassIcon from '/src/assets/hourglass.svg';
 import videoOnIcon from '/src/assets/video.svg';
 import videoOffIcon from '/src/assets/video-off.svg';
 
-import Hexagon from '/src/components/Hexagon';
+import ImageHexagon from '/src/components/ImageHexagon';
 import VideoHexagon from '/src/components/VideoHexagon';
 
 import './Display.scss';
@@ -19,8 +19,9 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, error
     const [videoOn, setVideoOn] = useState(false);
     const videoRef = useRef(null);
     const streamRef = useRef(null); // Add a ref to keep track of the video stream
+    const [aiLoading, setAiLoading] = useState(false);
 
-    const { timer, combinedTranscript, setMeetingState } = useAudioCall();
+    const { timer, combinedTranscript, setMeetingState, isGeneratingResponseRef } = useAudioCall();
 
     useEffect(() => {
         if (combinedTranscript.length !== prevTranscript.length) {
@@ -48,6 +49,10 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, error
             }
         };
     }, [videoOn]);
+
+    useEffect(() => {
+        setAiLoading(isGeneratingResponseRef.current);
+    }, [isGeneratingResponseRef]);
 
     // Set up video stream
     const getCameraStream = async () => {
@@ -92,7 +97,7 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, error
         <div className='interview-container'>
             <div className='call-members'>
                 <VideoHexagon pulsing={false} spinning={false} clickable={true} videoRef={videoRef} videoOn={videoOn} name={"Matt"} uniqueId={2} />
-                <Hexagon pulsing={false} spinning={false} clickable={false} uniqueId={1} />
+                <ImageHexagon pulsing={aiLoading} spinning={false} clickable={false} uniqueId={1} />
             </div>
             <div className='transcript-container' ref={transcriptRef}>
                 {combinedTranscript && combinedTranscript.map((segment, index) => (

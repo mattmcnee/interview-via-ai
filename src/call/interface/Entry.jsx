@@ -18,7 +18,7 @@ const Entry = ({ setMeetingState }) => {
         <div>
             <h1>Audio Call</h1>
             <button onClick={() => setMeetingState("loading")}>Enter Meeting</button>
-            <button onClick={fetchExternalIp}>Get External IP</button>
+            {/* <button onClick={fetchExternalIp}>Get External IP</button> */}
             {externalIp && <p>External IP: {externalIp}</p>}
         </div>
     );

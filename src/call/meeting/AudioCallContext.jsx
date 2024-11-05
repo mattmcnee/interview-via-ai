@@ -38,13 +38,9 @@ export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, ttsApiP
             isGeneratingResponseRef.current = true
             const transcriptLength = transcriptRef.current.length;
             if (messageResponseRef.current) {
-                const responseMessage = await messageResponseRef.current()
-                callPlaySpeaker(responseMessage);
-
+                const responseMessage = await messageResponseRef.current();
                 isGeneratingResponseRef.current = false;
-                if (transcriptRef.current.length > transcriptLength) {
-                    pushUserMessage();
-                }
+                callPlaySpeaker(responseMessage);
             }
         }
     };

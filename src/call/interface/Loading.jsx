@@ -38,6 +38,10 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
     };
 
     const handleStartVM = useCallback(async () => {
+        if (vmStatus === 'ACTIVE') {
+            return;
+        }
+
         setVmStatus('INITIALISING');
         
         try {
@@ -78,7 +82,11 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
     }, [vmStatus]);
 
     return (
-        <div className="space-y-4">
+        <div className="">
+            <p>This is a proof of concept and is not quite realtime. Expect responses to take 1-3 seconds.</p>
+            <p>Interruptions are currently not supported. Wait until the model has finished speaking before asking your next question.</p>
+            <p>The model retains knowledge of your last three questions. The entire transcript is available after concluding the interview.</p>
+
             {message && <p>{message}</p>}
             {vmStatus && <p>{vmStatus}</p>}
             {vmStatus === 'ACTIVE' && (

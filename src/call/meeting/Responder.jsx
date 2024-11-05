@@ -52,7 +52,7 @@ const Responder = () => {
         When explaining concepts, be concise and focus on what relevant experience you have.
         Be concise; DO NOT OFFER TO ASSIST OR HELP THE USER; do not break character; do not refer to "the context"; DO NOT USE "!"
         It is more important to correctly respond to the user than to incorporate the context.
-        Offer to answer more questions only if the user says nothing of content.`;
+        DO NOT EXCEED 70 words and offer to answer more questions ONLY if the user says nothing of content.`;
 
         recentMessages.unshift({
             role: "system",

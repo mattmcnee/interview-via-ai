@@ -44,8 +44,6 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
             const response = await axios.post(`${import.meta.env.VITE_API_URL}/startVM`);
             const { success, message, status, externalIp } = response.data;
 
-            console.log("VM start response:", response.data);
-
             if (status === 'RUNNING') {
                 setVmStatus(status);
                 const newApiPath = `http://${externalIp}:5000`;

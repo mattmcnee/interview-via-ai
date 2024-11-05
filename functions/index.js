@@ -398,16 +398,15 @@ exports.getSimilarDocuments = functions.runWith({ memory: "512MB" }).https.onReq
         const index = pc.index('interview-me');
         const answer = await index.query({ topK: topK, vector: vector, includeMetadata: true });
 
-        // const related = answer.matches.map(match => ({
-        //     title: match.metadata.title,
-        //     answer: match.metadata.answer
-        // }));
+        const related = answer.matches
+        .filter(match => match.score >= 0.25) // less than 0.25 is unlikely to be relevant
+        .map(match => 
+            `Question: ${match.metadata.title}\nAnswer: ${match.metadata.answer}`
+        )
+        .join('\n\n');
+
 
         // Step 3: Obtain Retrieval Augmented Generation (RAG) response using OpenAI API
-
-        const related = answer.matches.map(match => 
-            `Question: ${match.metadata.title}\nAnswer: ${match.metadata.answer}`
-        ).join('\n\n');
 
         const openai = new OpenAI({
             apiKey: openaiApiKey,
@@ -430,16 +429,20 @@ exports.getSimilarDocuments = functions.runWith({ memory: "512MB" }).https.onReq
         // });
 
         var messages = [...history];
-        const promptIndex = messages.length - 1;
+
+        // if there is at least one related document
+        if (related.length > 0) {
+            const promptIndex = messages.length - 1;
         
-        // if there is at least one item in messages
-        if (promptIndex >= 0) {
-            // add retrieved context to prompt
-            const prompt = messages[promptIndex].content;
-            messages[promptIndex] = {
-                role: "user",
-                content: `${prompt}\n\nThis is potential context. IGNORE THIS IF IT IS NOT RELEVANT:\n${related}`
-            };
+            // if there is at least one item in messages
+            if (promptIndex >= 0) {
+                // add retrieved context to prompt
+                const prompt = messages[promptIndex].content;
+                messages[promptIndex] = {
+                    role: "user",
+                    content: `${prompt}\n\nThis is potential context. IGNORE THIS IF IT IS NOT RELEVANT:\n\n${related}`
+                };
+            }
         }
 
         // Now make the API call with the modified history
@@ -455,7 +458,7 @@ exports.getSimilarDocuments = functions.runWith({ memory: "512MB" }).https.onReq
 
 
   
-        res.status(200).json({ success: true, message: ragMessage });
+        res.status(200).json({ success: true, message: ragMessage, context: answer });
       } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });

@@ -5,11 +5,11 @@ import { useAudioCall } from './AudioCallContext';
 
 const Responder = () => {
 
-    const { messageResponseRef } = useAudioCall();
+    const { messageResponseRef, transcriptRef } = useAudioCall();
 
     useEffect(() => {
         messageResponseRef.current = async (message) => {
-            const responseMessage = await handleClick(message.sentence, message.time);
+            const responseMessage = await getResponse(message.sentence, message.time);
             return responseMessage; // Return the response in this function
         };
 
@@ -18,20 +18,64 @@ const Responder = () => {
         };
     }, [messageResponseRef]);
 
-    const handleClick = async (text, time) => {
+    const normalizeText = text => text.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+
+    const getResponse = async (text, time) => {
+        console.log(transcriptRef.current);
+        console.log(text);
+
+
+        // Retrieve the last 20 messages and map them to the desired format
+        var messages = transcriptRef.current.slice(-20).map(message => ({
+            role: message.role === "user" ? "user" : "assistant",
+            content: message.text
+        }));
+
+        if (messages.length === 0 || normalizeText(messages[messages.length - 1].content) !== normalizeText(text)) {
+            messages.push({
+                role: "user",
+                content: text
+            });
+        }
+
+        // Join consecutive messages from the same role
+        const joinedMessages = [];
+        for (let i = 0; i < messages.length; i++) {
+            const currentMessage = messages[i];
+
+            if (joinedMessages.length === 0 || joinedMessages[joinedMessages.length - 1].role !== currentMessage.role) {
+                joinedMessages.push(currentMessage);
+            } else {
+                joinedMessages[joinedMessages.length - 1].content += `\n${currentMessage.content}`;
+            }
+        }
+
+        // strip joined messages down to 6 most recent
+        const recentMessages = joinedMessages.slice(-6);
+
         const preprompt = `You are a candidate in a job interview answering questions. 
-        Use only the relevant details about yourself in the provided context to answer questions.
-        If greeted or thanked, respond politely without requiring context; DO NOT USE "!"
-        Apologise if no relevant content is available, say either that you "don't know" or "can't recall" and ask for other questions. 
-        Be concise; DO NOT OFFER TO ASSIST OR HELP THE USER; do not break character; do not refer to "the context"; DO NOT USE "!"`;
+        Potential relevant context is provided in the user’s most recent question. DO NOT REPEAT THE CONTEXT IF IT IS NOT RELEVANT. 
+        Use only the conversation history or relevant details about yourself in this context to answer questions. If greeted or thanked, respond politely without requiring context; DO NOT USE "!"
+        If there is nothing relevant in the context or conversation history: apologise, say either that you "don't know" or "can't recall" and ask for clarification or other questions. 
+        When explaining concepts, be concise and focus on what relevant experience you have.
+        Be concise; DO NOT OFFER TO ASSIST OR HELP THE USER; do not break character; do not refer to "the context"; DO NOT USE "!"
+        It is more important to correctly respond to the user than to incorporate the context.`;
+
+        recentMessages.unshift({
+            role: "system",
+            content: preprompt
+        });
+
+        console.log(recentMessages);
 
         try {
-            const topK = 5; // number of similar documents to retrieve
+            const topK = 3; // number of similar documents to retrieve
 
             const result = await axios.post(`${import.meta.env.VITE_API_URL}/getSimilarDocuments`, {
                 topK,
                 text,
-                preprompt
+                preprompt,
+                history: recentMessages
             });
 
             const responseMessage = result.data.message;

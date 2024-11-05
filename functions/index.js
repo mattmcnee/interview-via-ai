@@ -376,7 +376,7 @@ exports.getSimilarDocuments = functions.runWith({ memory: "512MB" }).https.onReq
 
         // Step 1: Encode the text as a vector using OpenAI API
 
-        const { topK, text, preprompt } = req.body;
+        const { topK, text, preprompt, history } = req.body;
         const response = await axios.post(
             'https://api.openai.com/v1/embeddings',
             {
@@ -413,21 +413,43 @@ exports.getSimilarDocuments = functions.runWith({ memory: "512MB" }).https.onReq
             apiKey: openaiApiKey,
         });
 
+        // const ragResponse = await openai.chat.completions.create({
+        //     model: "gpt-4o-mini",
+        //     messages: [
+        //       {
+        //         role: "system",
+        //         content: preprompt
+        //       },
+        //       {
+        //         role: "user",
+        //         content: `Context:\n${related}\n\nQuestion: ${text}`
+        //       }
+        //     ],
+        //     temperature: 0.3,
+        //     max_tokens: 500
+        // });
+
+        var messages = [...history];
+        const promptIndex = messages.length - 1;
+        
+        // if there is at least one item in messages
+        if (promptIndex >= 0) {
+            // add retrieved context to prompt
+            const prompt = messages[promptIndex].content;
+            messages[promptIndex] = {
+                role: "user",
+                content: `${prompt}\n\nThis is potential context. IGNORE THIS IF IT IS NOT RELEVANT:\n${related}`
+            };
+        }
+
+        // Now make the API call with the modified history
         const ragResponse = await openai.chat.completions.create({
             model: "gpt-4o-mini",
-            messages: [
-              {
-                role: "system",
-                content: preprompt
-              },
-              {
-                role: "user",
-                content: `Context:\n${related}\n\nQuestion: ${text}`
-              }
-            ],
+            messages: messages,
             temperature: 0.3,
             max_tokens: 500
-          });
+        });
+
 
         const ragMessage = ragResponse.choices[0].message.content;
 

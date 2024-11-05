@@ -31,6 +31,7 @@ const Listener = () => {
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
+            handleStopRecording();
             // cleanup function to stop media recorder if it exists
             if (mediaRecorder) {
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());

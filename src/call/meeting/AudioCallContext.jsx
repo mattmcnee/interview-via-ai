@@ -9,6 +9,7 @@ export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, ttsApiP
     const [userTranscript, setUserTranscript] = useState('');
     const [aiTranscript, setAiTranscript] = useState('');
     const [combinedTranscript, setCombinedTranscript] = useState('');
+    const transcriptRef = useRef(null);
 
     const [userCurrentMessage, setUserCurrentMessage] = useState('');
     const [timer, setTimer] = useState(150);
@@ -38,6 +39,7 @@ export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, ttsApiP
         const combinedTranscript = [...userTranscript, ...aiTranscript].sort((a, b) => a.time - b.time);
         setCombinedTranscript(combinedTranscript);
         setSavedTranscript(combinedTranscript);
+        transcriptRef.current = combinedTranscript;
     }, [userTranscript, aiTranscript]);
 
     useEffect(() => {
@@ -64,7 +66,8 @@ export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, ttsApiP
             pushUserMessage,
             timer,
             setMeetingState,
-            ttsApiPath
+            ttsApiPath,
+            transcriptRef
         }}>
             {children}
         </AudioCallContext.Provider>

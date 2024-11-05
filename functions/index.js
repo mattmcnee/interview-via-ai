@@ -196,6 +196,78 @@ exports.awaitVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).h
     });
 });
 
+exports.awaitFlaskStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
+    corsHandler(req, res, async () => {
+        try {
+            const timeout = parseInt(req.query.timeout) || 30000; // Default 30s timeout
+            const apiPath = req.query.apiPath;
+            
+            if (!apiPath) {
+                throw new Error("API path must be specified");
+            }
+
+            const startTime = Date.now();
+            let currentStatus = false;
+            let lastError = null;
+            let attempts = 0;
+
+            // Poll every 200ms until timeout or healthy status is reached
+            while (Date.now() - startTime < timeout) {
+                attempts++;
+                try {
+                    const response = await axios.get(`${apiPath}/health`, {
+                        timeout: 200 // 200ms timeout for each individual request
+                    });
+                    
+                    currentStatus = response.data?.status === 'ACTIVE';
+                    
+                    if (currentStatus) {
+                        return res.json({
+                            success: true,
+                            message: 'Flask API is healthy',
+                            status: 'ACTIVE',
+                            attempts: attempts,
+                            elapsedTime: Date.now() - startTime
+                        });
+                    }
+                } catch (error) {
+                    // Store the error message, but only if it's not a common connection issue
+                    if (error.message && 
+                        !error.message.includes("ERR_CONNECTION_REFUSED") && 
+                        !error.message.includes("ERR_NETWORK") &&
+                        !error.message.includes("ECONNREFUSED") &&
+                        !error.message.includes("connect ETIMEDOUT")) {
+                        console.error('API check failed:', error);
+                        lastError = error.message;
+                    }
+                    
+                    currentStatus = false;
+                }
+
+                // Wait 200ms before next check
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            // If we get here, we've timed out
+            res.json({
+                success: false,
+                message: 'Timeout reached waiting for Flask API to become healthy',
+                status: 'INACTIVE',
+                attempts: attempts,
+                elapsedTime: Date.now() - startTime,
+                timeoutReached: true,
+                lastError: lastError
+            });
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    });
+});
+
 exports.checkFlask = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {

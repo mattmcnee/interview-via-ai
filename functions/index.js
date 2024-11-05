@@ -125,6 +125,77 @@ exports.checkVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.o
     });
 });
 
+exports.awaitVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
+    corsHandler(req, res, async () => {
+        try {
+            const timeout = parseInt(req.query.timeout) || 30000; // Default 30s timeout
+            const targetStatus = req.query.target;
+            
+            if (!targetStatus) {
+                throw new Error("Target status must be specified");
+            }
+
+            // Manually instantiate the Compute client with service account credentials
+            const serviceAccount = JSON.parse(Buffer.from(process.env.VM_SERVICE_ACCOUNT, 'base64').toString());
+            const computeClient = new InstancesClient({
+                credentials: serviceAccount,
+            });
+
+            // Configuration variables
+            const projectId = functions.config().vm.project;
+            const zone = functions.config().vm.zone;
+            const instanceName = functions.config().vm.id;
+
+            const startTime = Date.now();
+            let currentStatus = null;
+            let currentExternalIp = "blank";
+
+            // Poll every 200ms until timeout or target status is reached
+            while (Date.now() - startTime < timeout) {
+                const [metadata] = await computeClient.get({
+                    project: projectId,
+                    zone: zone,
+                    instance: instanceName,
+                });
+
+                currentStatus = metadata.status;
+                
+                const networkInterfaces = metadata.networkInterfaces || [];
+                currentExternalIp = networkInterfaces.length > 0 && networkInterfaces[0].accessConfigs
+                    ? networkInterfaces[0].accessConfigs[0].natIP
+                    : "blank";
+
+                if (currentStatus === targetStatus) {
+                    return res.json({
+                        success: true,
+                        message: `VM ${instanceName} reached target status: ${targetStatus}`,
+                        status: currentStatus,
+                        externalIp: currentExternalIp
+                    });
+                }
+
+                // Wait 200ms before next check
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            // If we get here, we've timed out
+            res.json({
+                success: false,
+                message: `Timeout reached before VM ${instanceName} reached status: ${targetStatus}`,
+                status: currentStatus,
+                externalIp: currentExternalIp,
+                timeoutReached: true
+            });
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    });
+});
+
 exports.checkFlask = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {

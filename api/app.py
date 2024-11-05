@@ -20,7 +20,7 @@ os.makedirs("generated_audio", exist_ok=True)
 @app.route('/health', methods=['GET'])
 def health_check():
     # check if the API is active
-    return jsonify({'status': 'API is active'}), 200
+    return jsonify({'status': 'ACTIVE'}), 200
 
 @app.route('/generate', methods=['POST'])
 def generate():

@@ -7,39 +7,55 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
     const [vmStatus, setVmStatus] = useState('');
     const [checkingStatus, setCheckingStatus] = useState(false);
     const [startTime, setStartTime] = useState(null);
+    const [apiHealthy, setApiHealthy] = useState(false);
+    const TIMEOUT_DURATION = 60000; // 60 seconds timeout
+
+    // check if Flask server is running
+    const checkApiHealth = useCallback(async (apiPath) => {
+        try {
+            const response = await axios.get(`${apiPath}/health`);
+            const isHealthy = response.data?.status === 'ACTIVE';
+            setApiHealthy(isHealthy);
+            return isHealthy;
+        } catch (error) {
+            // Only log errors that are not connection or network-related
+            if (error && !error.message.includes("ERR_CONNECTION_REFUSED") && !error.message.includes("ERR_NETWORK")) {
+                console.error('API check failed:', error);
+            }
+            setApiHealthy(false);
+            return false;
+        }
+    }, []);
+
 
     const checkVMStatus = useCallback(async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/checkVM`);
-            const { success, message, status, externalIp } = response.data; // Destructure externalIp
+            const { success, message, status, externalIp } = response.data;
 
             if (success) {
-                setVmStatus(`VM Status: ${status}`);
-                if (externalIp && externalIp !== "blank") { // Check externalIp
-                    setTtsApiPath("http://"+externalIp+":5000");
-                    console.log('TTS API Path:', externalIp); // Log the externalIp
+                setVmStatus(`${status}`);
+                if (externalIp && externalIp !== "blank") {
+                    const newApiPath = `http://${externalIp}:5000`;
+                    setTtsApiPath(newApiPath);
                 }
-                if (status === 'RUNNING') {
-                    setCheckingStatus(false);
-                    setMeetingState('meeting');
-                    setMessage('VM is now running');
-                }
-                return status;
+                return { status, apiPath: externalIp ? `http://${externalIp}:5000` : null };
             } else {
                 setMessage(`Failed: ${message}`);
-                return null;
+                return { status: null, apiPath: null };
             }
         } catch (error) {
             console.error('Error checking VM status:', error);
             setMessage(`Error: ${error.message}`);
-            return null;
+            return { status: null, apiPath: null };
         }
-    }, [setMeetingState]);
+    }, [setTtsApiPath]);
 
     const handleStartVM = useCallback(async () => {
         setLoading(true);
         setMessage('');
         setVmStatus('');
+        setApiHealthy(false);
         
         try {
             const response = await axios.post(`${import.meta.env.VITE_API_URL}/startVM`);
@@ -47,16 +63,12 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
 
             if (success) {
                 setMessage(`Success: ${message} (Status: ${status})`);
-                if (externalIp && externalIp !== "blank") { // Check externalIp
-                    setTtsApiPath("http://"+externalIp+":5000");
-                    console.log('TTS API Path:', externalIp); // Log the externalIp
+                if (externalIp && externalIp !== "blank") {
+                    const newApiPath = `http://${externalIp}:5000`;
+                    setTtsApiPath(newApiPath);
                 }
-                if (status === 'RUNNING') {
-                    setMeetingState('meeting');
-                } else {
-                    setCheckingStatus(true);
-                    setStartTime(Date.now());
-                }
+                setCheckingStatus(true);
+                setStartTime(Date.now());
             } else {
                 setMessage(`Failed: ${message}`);
                 setMeetingState('error');
@@ -68,7 +80,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
         } finally {
             setLoading(false);
         }
-    }, [setMeetingState]);
+    }, [setMeetingState, setTtsApiPath]);
 
     useEffect(() => {
         handleStartVM();
@@ -76,38 +88,55 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
 
     useEffect(() => {
         let intervalId;
-
+    
         if (checkingStatus && startTime) {
             intervalId = setInterval(async () => {
                 const currentTime = Date.now();
                 const elapsedTime = currentTime - startTime;
-
-                if (elapsedTime >= 30000) {
+    
+                if (elapsedTime >= TIMEOUT_DURATION) {
                     clearInterval(intervalId);
                     setCheckingStatus(false);
-                    setMessage('Timeout: VM status check exceeded 30 seconds');
+                    setMessage('Timeout: Status check exceeded 40 seconds');
                     setMeetingState('error');
                     return;
                 }
-
-                const status = await checkVMStatus();
-                if (status === 'RUNNING') {
-                    clearInterval(intervalId);
+    
+                // If VM is already running and we have an API path, skip VM status check
+                if (vmStatus === 'RUNNING' && ttsApiPath != "") {
+                    setMessage('Checking API health...');
+                    const isApiHealthy = await checkApiHealth(ttsApiPath);
+                    
+                    if (isApiHealthy) {
+                        clearInterval(intervalId);
+                        setCheckingStatus(false);
+                        setMessage('VM and API are ready');
+                        setVmStatus('LIVE');
+                    } else {
+                        setMessage('Waiting for API to become available...');
+                    }
+                } else {
+                    // Otherwise check VM status
+                    await checkVMStatus();
                 }
             }, 1000);
         }
-
+    
         return () => {
             if (intervalId) {
                 clearInterval(intervalId);
             }
         };
-    }, [checkingStatus, startTime, checkVMStatus, setMeetingState]);
+    }, [checkingStatus, startTime, checkVMStatus, checkApiHealth, setMeetingState, vmStatus, ttsApiPath]);
 
     return (
         <div className="space-y-4">
             {message && <p>{message}</p>}
             {vmStatus && <p>{vmStatus}</p>}
+            {apiHealthy && <p>API Status: Active</p>}
+            {vmStatus === 'LIVE' && (
+                <button onClick={() => setMeetingState('meeting')} className="btn btn-primary">Start Meeting</button>
+            )}
         </div>
     );
 };

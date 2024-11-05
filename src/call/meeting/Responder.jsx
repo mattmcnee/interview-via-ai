@@ -8,8 +8,8 @@ const Responder = () => {
     const { messageResponseRef, transcriptRef } = useAudioCall();
 
     useEffect(() => {
-        messageResponseRef.current = async (message) => {
-            const responseMessage = await getResponse(message.sentence, message.time);
+        messageResponseRef.current = async () => {
+            const responseMessage = await getResponse();
             return responseMessage; // Return the response in this function
         };
 
@@ -20,9 +20,8 @@ const Responder = () => {
 
     const normalizeText = text => text.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
 
-    const getResponse = async (text, time) => {
+    const getResponse = async () => {
         console.log(transcriptRef.current);
-        console.log(text);
 
 
         // Retrieve the last 20 messages and map them to the desired format
@@ -30,13 +29,6 @@ const Responder = () => {
             role: message.role === "user" ? "user" : "assistant",
             content: message.text
         }));
-
-        if (messages.length === 0 || normalizeText(messages[messages.length - 1].content) !== normalizeText(text)) {
-            messages.push({
-                role: "user",
-                content: text
-            });
-        }
 
         // Join consecutive messages from the same role
         const joinedMessages = [];
@@ -54,13 +46,13 @@ const Responder = () => {
         const recentMessages = joinedMessages.slice(-6);
 
         const preprompt = `You are a candidate in a job interview answering questions. 
-        Potential relevant context is provided in the user’s most recent question. DO NOT REPEAT THE CONTEXT IF IT IS NOT RELEVANT. 
+        Potential relevant context is provided in the user's most recent question. DO NOT REPEAT THE CONTEXT IF IT IS NOT RELEVANT. 
         Use only the conversation history or relevant details about yourself in this context to answer questions. If greeted or thanked, respond politely without requiring context; DO NOT USE "!"
         If there is nothing relevant in the context or conversation history: apologise, say either that you "don't know" or "can't recall" and ask for clarification or other questions. 
         When explaining concepts, be concise and focus on what relevant experience you have.
         Be concise; DO NOT OFFER TO ASSIST OR HELP THE USER; do not break character; do not refer to "the context"; DO NOT USE "!"
         It is more important to correctly respond to the user than to incorporate the context.
-        Offer to answer more questions if the user says nothing of content.`;
+        Offer to answer more questions only if the user says nothing of content.`;
 
         recentMessages.unshift({
             role: "system",
@@ -74,7 +66,7 @@ const Responder = () => {
 
             const result = await axios.post(`${import.meta.env.VITE_API_URL}/getSimilarDocuments`, {
                 topK,
-                text,
+                text: "",
                 preprompt,
                 history: recentMessages
             });

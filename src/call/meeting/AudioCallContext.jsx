@@ -10,6 +10,7 @@ export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, ttsApiP
     const [aiTranscript, setAiTranscript] = useState('');
     const [combinedTranscript, setCombinedTranscript] = useState('');
     const transcriptRef = useRef(null);
+    const isGeneratingResponseRef = useRef(false);
 
     const [userCurrentMessage, setUserCurrentMessage] = useState('');
     const [timer, setTimer] = useState(150);
@@ -24,22 +25,40 @@ export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, ttsApiP
     };
 
     const callGenerateResponse = async (message) => {
+        isGeneratingResponseRef.current = true
         if (messageResponseRef.current) {
             return await messageResponseRef.current(message);
         }
     };
 
-    const pushUserMessage = async (message) => {
-        const responseMessage = await callGenerateResponse(message);
-        callPlaySpeaker(responseMessage);
+    const pushUserMessage = async () => {
+        updateTranscript();
+
+        if (isGeneratingResponseRef.current != true) {
+            isGeneratingResponseRef.current = true
+            const transcriptLength = transcriptRef.current.length;
+            if (messageResponseRef.current) {
+                const responseMessage = await messageResponseRef.current()
+                callPlaySpeaker(responseMessage);
+
+                isGeneratingResponseRef.current = false;
+                if (transcriptRef.current.length > transcriptLength) {
+                    pushUserMessage();
+                }
+            }
+        }
     };
 
-    useEffect(() => {
-        // Combine and sort the transcripts by time
+    // combine and sort the transcripts by time
+    const updateTranscript = () => {
         const combinedTranscript = [...userTranscript, ...aiTranscript].sort((a, b) => a.time - b.time);
         setCombinedTranscript(combinedTranscript);
         setSavedTranscript(combinedTranscript);
         transcriptRef.current = combinedTranscript;
+    }
+
+    useEffect(() => {
+        updateTranscript();
     }, [userTranscript, aiTranscript]);
 
     useEffect(() => {
@@ -67,7 +86,8 @@ export const AudioCallProvider = ({ setMeetingState, setSavedTranscript, ttsApiP
             timer,
             setMeetingState,
             ttsApiPath,
-            transcriptRef
+            transcriptRef,
+            isGeneratingResponseRef
         }}>
             {children}
         </AudioCallContext.Provider>

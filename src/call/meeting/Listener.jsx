@@ -4,7 +4,7 @@ import { useAudioCall } from './AudioCallContext';
 import Display from './Display';
 
 const Listener = () => {
-    const { setUserTranscript, pushUserMessage } = useAudioCall();
+    const { setUserTranscript, pushUserMessage, isGeneratingResponseRef } = useAudioCall();
 
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -46,6 +46,8 @@ const Listener = () => {
             setError("Cannot start recording while tab is inactive");
             return;
         }
+
+        isGeneratingResponseRef.current = false;
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -185,7 +187,8 @@ const Listener = () => {
         console.log("Time:", time);
         if (sentence && !userSentences.current.includes(sentence)) {
             userSentences.current.push(sentence);
-            pushUserMessage({sentence, time: time + 1});
+            // pushUserMessage({sentence, time: time + 1});
+            pushUserMessage();
         }
     };
 

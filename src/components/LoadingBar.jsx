@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ExpandingHexagon from './ExpandingHexagon';
+import HexagonButton from './HexagonButton';
 
 const LoadingBar = ({ message = "Initialising VM", isLoading = true, action }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -56,7 +56,17 @@ const LoadingBar = ({ message = "Initialising VM", isLoading = true, action }) =
                     transition: 'left 1s ease, transform 1s ease',
                     zIndex: 2
                 }}>
-                    <ExpandingHexagon text={"Start Meeting"} textWidth={100} isExpanded={isExpanded} size={60} rotation={rotation} action={action} />
+                    <HexagonButton 
+                        size={60}
+                        rotation={rotation}
+                        text={"Start Meeting"} 
+                        textWidth={100} 
+                        isExpanded={isExpanded}   
+                        action={action} 
+                        fill={true}
+                        backgroundColor={"#000"}
+                        color='#fff'
+                    />
                 </div>
                 <div style={{ 
                     marginLeft: "80px", 

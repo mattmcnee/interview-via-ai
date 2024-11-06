@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import LoadingBar from '/src/components/LoadingBar';
+import HexagonButton from '/src/components/HexagonButton';
 
 const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
     const [message, setMessage] = useState("Warming up the voice box...");
@@ -105,6 +106,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
 
     return (
         <div className="" style={{display:'flex', flexDirection: 'column', alignItems: 'flex-start', maxWidth: '860px', margin: ' 0 auto', height: '100%', padding: '50px 30px'}}>
+            {/* <HexagonButton fill={false} action={() => setMeetingState('entry')} text="Back" size={60} textWidth={40} backgroundColor="#ccc" color="#000" /> */}
             <div style={{display: 'flex', flexDirection: 'column', flex: '1', justifyContent: 'center'}}>
                 <p style={{margin:'4px 0'}}>This is a proof of concept and is not quite realtime. Expect responses to take 1-3 seconds.</p>
                 <p style={{margin:'4px 0'}}>Interruptions are currently not supported. Wait until the model has finished speaking before asking your next question.</p>

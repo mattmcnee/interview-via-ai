@@ -101,7 +101,9 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
     }, [setMeetingState, setTtsApiPath, vmStatus, pushVmState]);
 
     useEffect(() => {
-        handleStartVM();
+        if (vmStatus === '') {
+            handleStartVM();
+        }
     }, [handleStartVM]);
 
     return (

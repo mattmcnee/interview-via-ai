@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Hexagon.scss';
 
-const VideoHexagon = ({ size = 300, pulsing = false, spinning = false, clickable = false, uniqueId, videoRef, videoOn, name }) => {
+const VideoHexagon = ({ size = 200, pulsing = false, spinning = false, clickable = false, uniqueId, videoRef, videoOn, name }) => {
   const [rotation, setRotation] = useState(0);
   const [videoLoaded, setVideoLoaded] = useState(false); // State to track if video is loaded
 

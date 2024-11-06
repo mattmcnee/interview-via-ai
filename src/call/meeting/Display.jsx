@@ -9,6 +9,8 @@ import videoOffIcon from '/src/assets/video-off.svg';
 import ImageHexagon from '/src/components/ImageHexagon';
 import VideoHexagon from '/src/components/VideoHexagon';
 
+import HexagonButton from '/src/components/HexagonButton';
+
 import './Display.scss';
 
 import { useAudioCall } from './AudioCallContext';
@@ -96,8 +98,12 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, error
     return (
         <div className='interview-container'>
             <div className='call-members'>
-                <VideoHexagon pulsing={false} spinning={false} clickable={true} videoRef={videoRef} videoOn={videoOn} name={"Matt"} uniqueId={2} />
-                <ImageHexagon pulsing={aiLoading} spinning={false} clickable={false} uniqueId={1} />
+                <div className='member-container'>
+                    <VideoHexagon size={140} pulsing={false} spinning={false} clickable={true} videoRef={videoRef} videoOn={videoOn} name={"Matt"} uniqueId={2} />
+                </div>
+                <div className='member-container'>
+                    <ImageHexagon size={140} pulsing={aiLoading} spinning={false} clickable={false} uniqueId={1} />
+                </div>
             </div>
             <div className='transcript-container' ref={transcriptRef}>
                 {combinedTranscript && combinedTranscript.map((segment, index) => (
@@ -106,8 +112,9 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, error
                     </div>
                 ))}
             </div>
-
             <div className="options-box">
+            <HexagonButton content={
+            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly'}}>
                 {isRecording ? (
                     <button onClick={handleStopRecording} className="mic-button">
                         <img src={micOnIcon} alt="Stop Recording" />
@@ -141,6 +148,8 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, error
                     <img src={exitIcon} alt="Exit meeting" />
                     <div className="button-text">Leave</div>
                 </button>
+            </div>
+            } size={80} contentWidth={600} backgroundColor="#ddd" color="#000" fill={false} hoverable={false}/>
             </div>
         </div>
     );

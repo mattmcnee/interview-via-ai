@@ -9,7 +9,8 @@ const HexagonButton = ({
   rotation = 0,
   isExpanded = true,
   fill = true,
-  action
+  hoverable = true,
+  action = () => {}
 }) => {
 
   const [isHovered, setIsHovered] = useState(false);
@@ -123,14 +124,15 @@ const HexagonButton = ({
   );
 
   return (
-    <div style={{overflow: 'hidden'}}>
+    <div style={{overflow: 'hidden', flex: '0', display: 'flex', minHeight: `${height + 10}px`, minWidth: 'fit-content'}}>
       <div
         style={{
           display: 'flex',
+          flex: '0',
           alignItems: 'center',
           cursor: isExpanded ? 'pointer' : 'initial',
           transition: 'all 0.3s ease',
-          transform: `rotate(${rotation}deg) scale(${isHovered && isExpanded ? 1.03 : 1})`,
+          transform: `rotate(${rotation}deg) scale(${isHovered && isExpanded && hoverable ? 1.03 : 1})`,
           transformOrigin: `${hexagonCenterX}px ${hexagonCenterY}px`,
           margin: '5px'
         }}
@@ -147,7 +149,7 @@ const HexagonButton = ({
           style={{
             width: isExpanded ? `${contentWidth}px` : '0px',
             height: size - size / 5 + (fill ? 0 : 1),
-            backgroundColor: fill ? backgroundColor : 'transparent',
+            backgroundColor: fill ? backgroundColor : '#f1f1f1',
             borderTop: fill ? 'none' : `1px solid ${backgroundColor}`,
             borderBottom: fill ? 'none' : `1px solid ${backgroundColor}`,
             transition: 'all 0.3s ease',

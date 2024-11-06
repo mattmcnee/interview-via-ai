@@ -22,6 +22,7 @@ html, body{
 
 #root {
   min-height: 100vh;
+  background-color: #f1f1f1;
 }
 
 button, input, textarea, select, span, p, h1, h2, h3, h4, h5, h6 {

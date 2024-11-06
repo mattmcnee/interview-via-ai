@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 const HexagonButton = ({
   backgroundColor = "#000000",
   color = "#ffffff",
-  text = "Button",
-  textWidth = 100,
+  content = "Button",
+  contentWidth = 100,
   size = 80,
   rotation = 0,
   isExpanded = true,
@@ -123,53 +123,55 @@ const HexagonButton = ({
   );
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        cursor: isExpanded ? 'pointer' : 'initial',
-        transition: 'all 0.3s ease',
-        transform: `rotate(${rotation}deg) scale(${isHovered && isExpanded ? 1.03 : 1})`,
-        transformOrigin: `${hexagonCenterX}px ${hexagonCenterY}px`,
-        margin: '5px'
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={() => {
-        if (isExpanded) {
-          action();
-        }
-      }}
-    >
-      {fill ? filledLeftPath : outlinedLeftPath}
+    <div style={{overflow: 'hidden'}}>
       <div
         style={{
-          width: isExpanded ? `${textWidth}px` : '0px',
-          height: size - size / 5 + (fill ? 0 : 1),
-          backgroundColor: fill ? backgroundColor : 'transparent',
-          borderTop: fill ? 'none' : `1px solid ${backgroundColor}`,
-          borderBottom: fill ? 'none' : `1px solid ${backgroundColor}`,
-          transition: 'all 0.3s ease',
-          overflow: 'hidden',
           display: 'flex',
-          justifyContent: 'center',
           alignItems: 'center',
-          color: color
+          cursor: isExpanded ? 'pointer' : 'initial',
+          transition: 'all 0.3s ease',
+          transform: `rotate(${rotation}deg) scale(${isHovered && isExpanded ? 1.03 : 1})`,
+          transformOrigin: `${hexagonCenterX}px ${hexagonCenterY}px`,
+          margin: '5px'
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={() => {
+          if (isExpanded) {
+            action();
+          }
         }}
       >
+        {fill ? filledLeftPath : outlinedLeftPath}
         <div
           style={{
+            width: isExpanded ? `${contentWidth}px` : '0px',
+            height: size - size / 5 + (fill ? 0 : 1),
+            backgroundColor: fill ? backgroundColor : 'transparent',
+            borderTop: fill ? 'none' : `1px solid ${backgroundColor}`,
+            borderBottom: fill ? 'none' : `1px solid ${backgroundColor}`,
             transition: 'all 0.3s ease',
-            opacity: isExpanded ? 1 : 0,
-            minWidth: textWidth,
-            zIndex: 2,
-            fontWeight: '400'
+            overflow: 'hidden',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: color
           }}
         >
-          {text}
+          <div
+            style={{
+              transition: 'all 0.3s ease',
+              opacity: isExpanded ? 1 : 0,
+              minWidth: contentWidth,
+              zIndex: 2,
+              fontWeight: '400'
+            }}
+          >
+            {content}
+          </div>
         </div>
+        {fill ? filledRightPath : outlinedRightPath}
       </div>
-      {fill ? filledRightPath : outlinedRightPath}
     </div>
   );
 };

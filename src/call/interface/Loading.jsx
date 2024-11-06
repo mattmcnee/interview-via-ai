@@ -105,7 +105,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
     }, [handleStartVM]);
 
     return (
-        <div className="" style={{display:'flex', flexDirection: 'column', alignItems: 'flex-start', maxWidth: '860px', margin: ' 0 auto', height: '100%', padding: '50px 30px'}}>
+        <div className="" style={{display:'flex', flexDirection: 'column', alignItems: 'flex-start', maxWidth: '860px', margin: ' 0 auto', height: '100vh', padding: '50px 30px'}}>
             {/* <HexagonButton fill={false} action={() => setMeetingState('entry')} text="Back" size={60} textWidth={40} backgroundColor="#ccc" color="#000" /> */}
             <div style={{display: 'flex', flexDirection: 'column', flex: '1', justifyContent: 'center'}}>
                 <p style={{margin:'4px 0'}}>This is a proof of concept and is not quite realtime. Expect responses to take 1-3 seconds.</p>

@@ -59,8 +59,8 @@ const LoadingBar = ({ message = "Initialising VM", isLoading = true, action }) =
                     <HexagonButton 
                         size={60}
                         rotation={rotation}
-                        text={"Start Meeting"} 
-                        textWidth={100} 
+                        content={"Start Meeting"} 
+                        contentWidth={100} 
                         isExpanded={isExpanded}   
                         action={action} 
                         fill={true}

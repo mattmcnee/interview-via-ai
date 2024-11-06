@@ -11,9 +11,18 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+*{
+  box-sizing: border-box;
+}
+
 html, body{
   margin: 0;
   padding: 0;
+  height: 100%;
+}
+
+#root {
+  height: 100%;
 }
 
 button, input, textarea, select, span, p, h1, h2, h3, h4, h5, h6 {

@@ -12,7 +12,7 @@ import AudioCallPage from './call/AudioCallPage';
 
 import Speaker from './call/meeting/Speaker';
 import TextProcessor from './TextProcesser';
-import LoadingBar from './components/LoadingBar';
+import LoadingPage from './components/LoadingPage';
 
 function App() {
   return (
@@ -33,7 +33,7 @@ function App() {
 
         <Route path="/text" element={<TextProcessor />} />
 
-        <Route path='/loading' element={<LoadingBar/>} />
+        <Route path='/loading' element={<LoadingPage/>} />
 
       </Routes>
     </Router>

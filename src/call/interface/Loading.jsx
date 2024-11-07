@@ -28,6 +28,9 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
                 case 'ERROR':
                     setMessage("Oops, something went wrong. Please try again later.");
                     break;
+                case 'INACTIVE':
+                    setMessage("Timed out loading model. Please try again later.");
+                    break;
             }
     
             return newStatus;
@@ -46,6 +49,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
             return response.data;
         } catch (error) {
             console.error("Error:", error.response ? error.response.data : error.message);
+            pushVmState('ERROR');
             throw error;
         }
     };
@@ -62,6 +66,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
             return response.data;
         } catch (error) {
             console.error("Error checking Flask API status:", error.response ? error.response.data : error.message);
+            pushVmState('ERROR');
             throw error;
         }
     };

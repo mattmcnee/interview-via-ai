@@ -61,6 +61,7 @@ pip install inflect
 pip install tensorflow
 pip install flask
 pip install flask_cors
+pip install python-dotenv
 ```
 
 ### Clone required repositories

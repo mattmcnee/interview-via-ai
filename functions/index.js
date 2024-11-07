@@ -81,6 +81,66 @@ exports.startVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.o
     });
 });
 
+exports.stopVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
+    corsHandler(req, res, async () => {
+        try {
+            // Manually instantiate the Compute client with service account credentials
+            const serviceAccount = JSON.parse(Buffer.from(process.env.VM_SERVICE_ACCOUNT, 'base64').toString());
+            const computeClient = new InstancesClient({
+                credentials: serviceAccount,
+            });
+
+            // Configuration variables
+            const projectId = functions.config().vm.project;
+            const zone = functions.config().vm.zone;
+            const instanceName = functions.config().vm.id;
+
+            // Get the VM instance
+            const [metadata] = await computeClient.get({
+                project: projectId,
+                zone: zone,
+                instance: instanceName,
+            });
+            const status = metadata.status;
+
+            // Only stop if the VM is running
+            if (status === 'RUNNING') {
+                const [operation] = await computeClient.stop({
+                    project: projectId,
+                    zone: zone,
+                    instance: instanceName,
+                });
+
+                res.json({
+                    success: true,
+                    message: `VM ${instanceName} is stopping`,
+                    status: 'STOPPING',
+                    externalIp: 'blank'
+                });
+            } else {
+                const networkInterfaces = metadata.networkInterfaces || [];
+                const externalIp = networkInterfaces.length > 0 && networkInterfaces[0].accessConfigs
+                    ? networkInterfaces[0].accessConfigs[0].natIP
+                    : "blank";
+
+                res.json({
+                    success: true,
+                    message: `VM ${instanceName} is already stopped`,
+                    status: status,
+                    externalIp: externalIp
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    });
+});
+
+
 exports.getVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {

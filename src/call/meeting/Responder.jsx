@@ -51,8 +51,7 @@ const Responder = () => {
         If there is nothing relevant in the context or conversation history: apologise, say either that you "don't know" or "can't recall" and ask for clarification or other questions. 
         When explaining concepts, be concise and focus on what relevant experience you have.
         Be concise; DO NOT OFFER TO ASSIST OR HELP THE USER; do not break character; do not refer to "the context"; DO NOT USE "!"
-        It is more important to correctly respond to the user than to incorporate the context.
-        DO NOT EXCEED 70 words and offer to answer more questions ONLY if the user says nothing of content.`;
+        It is more important to correctly respond to the user than to incorporate the context. DO NOT EXCEED 70 words.`;
 
         recentMessages.unshift({
             role: "system",

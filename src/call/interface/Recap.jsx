@@ -10,11 +10,13 @@ const Recap = ({ savedTranscript, setMeetingState }) => {
             <div style={{display: 'flex', flexDirection: 'column', flex: '1', justifyContent: 'center', width: '100%'}}>
             <h1>Recap</h1>
             <p>Here is the summary of your audio call:</p>
+                <div style={{maxHeight: '300px', overflow: 'auto'}}>
             <ul>
                 {savedTranscript.map((transcript, index) => (
                     <li key={index}>{transcript.role}: {transcript.text}</li>
                 ))}
             </ul>
+            </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', width: '100%' }}>
                 <HexagonButton 

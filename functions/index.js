@@ -7,9 +7,12 @@ const Pinecone = require('@pinecone-database/pinecone').Pinecone;
 const { SpeechClient } = require('@google-cloud/speech');
 const { Buffer } = require('buffer');
 const { InstancesClient } = require('@google-cloud/compute').v1;
+const crypto = require('crypto');
+require('dotenv').config();
 
 admin.initializeApp();
 const db = admin.firestore();
+
 
 const pc = new Pinecone({
   apiKey: functions.config().pinecone.api_key
@@ -185,9 +188,116 @@ exports.getVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).htt
     });
 });
 
+// exports.awaitVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
+//     corsHandler(req, res, async () => {
+//         try {
+//             const timeout = parseInt(req.query.timeout) || 30000; // Default 30s timeout
+//             const targetStatus = req.query.target;
+            
+//             if (!targetStatus) {
+//                 throw new Error("Target status must be specified");
+//             }
+
+//             // Manually instantiate the Compute client with service account credentials
+//             const serviceAccount = JSON.parse(Buffer.from(process.env.VM_SERVICE_ACCOUNT, 'base64').toString());
+//             const computeClient = new InstancesClient({
+//                 credentials: serviceAccount,
+//             });
+
+//             // Configuration variables
+//             const projectId = functions.config().vm.project;
+//             const zone = functions.config().vm.zone;
+//             const instanceName = functions.config().vm.id;
+
+//             const startTime = Date.now();
+//             let currentStatus = null;
+//             let currentExternalIp = "blank";
+
+//             // Poll every 200ms until timeout or target status is reached
+//             while (Date.now() - startTime < timeout) {
+//                 const [metadata] = await computeClient.get({
+//                     project: projectId,
+//                     zone: zone,
+//                     instance: instanceName,
+//                 });
+
+//                 currentStatus = metadata.status;
+                
+//                 const networkInterfaces = metadata.networkInterfaces || [];
+//                 currentExternalIp = networkInterfaces.length > 0 && networkInterfaces[0].accessConfigs
+//                     ? networkInterfaces[0].accessConfigs[0].natIP
+//                     : "blank";
+
+//                 if (currentStatus === targetStatus) {
+//                     return res.json({
+//                         success: true,
+//                         message: `VM ${instanceName} reached target status: ${targetStatus}`,
+//                         status: currentStatus,
+//                         externalIp: currentExternalIp
+//                     });
+//                 }
+
+//                 // Wait 200ms before next check
+//                 await new Promise(resolve => setTimeout(resolve, 200));
+//             }
+
+//             // If we get here, we've timed out
+//             res.json({
+//                 success: false,
+//                 message: `Timeout reached before VM ${instanceName} reached status: ${targetStatus}`,
+//                 status: currentStatus,
+//                 externalIp: currentExternalIp,
+//                 timeoutReached: true
+//             });
+//         } catch (error) {
+//             console.error('Error:', error);
+//             res.status(500).json({
+//                 success: false,
+//                 error: error.message
+//             });
+//         }
+//     });
+// });
+
+const authenticateRequest = (req, postKey) => {
+    const payloadString = JSON.stringify(req.body);
+    const hmac = crypto.createHmac('sha256', postKey);
+    hmac.update(payloadString);
+    const expectedSignature = hmac.digest('hex');
+    
+    const signature = req.headers['x-signature']; // Signature sent from frontend
+
+    // Return true if signatures match, otherwise false
+    return signature === expectedSignature;
+};
+
+const authenticateGetRequest = (req, postKey) => {
+    // Sort the query parameters to ensure consistent ordering
+    const orderedParams = {};
+    Object.keys(req.query).sort().forEach(key => {
+        orderedParams[key] = req.query[key];
+    });
+    
+    const payloadString = JSON.stringify(orderedParams);
+
+    console.log(payloadString);
+
+    const hmac = crypto.createHmac('sha256', postKey);
+    hmac.update(payloadString);
+    const expectedSignature = hmac.digest('hex');
+
+    const signature = req.headers['x-signature'];
+    return signature === expectedSignature;
+};
+
 exports.awaitVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {
+            const postKey = process.env.FUNCTIONS_API_KEY;
+            if (!authenticateGetRequest(req, postKey)) {
+                return res.status(401).json({ error: 'Invalid signature' });
+            }
+
             const timeout = parseInt(req.query.timeout) || 30000; // Default 30s timeout
             const targetStatus = req.query.target;
             

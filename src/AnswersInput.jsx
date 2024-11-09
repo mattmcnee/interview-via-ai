@@ -31,7 +31,7 @@ const AnswersInput = () => {
   return (
     <div>
       {formData.map((item) => (
-        <div key={item.id} style={{ marginBottom: '20px', minWidth: '400px' }}>
+        <div key={item.id} style={{ margin: '0 auto 20px auto', minWidth: '400px', maxWidth: '800px' }}>
           <label>
             <strong>Title:</strong>
             <input

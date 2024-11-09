@@ -37,22 +37,22 @@
   {
     "id": "8",
     "title": "What technologies are you most comfortable with?",
-    "answer": "I am most comfortable with JavaScript, React, and Firebase for front-end development. For back-end, I have experience with Node.js and Express, along with databases like Firestore."
+    "answer": "I am most comfortable with JavaScript, React, and Firebase for front-end development. For back-end, I have experience with Node.js and Express, along with databases like Firestore. I've worked extensively with Google Cloud Platform and have also deployed software to Amazon Web services."
   },
   {
     "id": "9",
     "title": "How do you stay updated with industry trends?",
-    "answer": "I regularly read industry blogs, follow influential developers on social media, and participate in online communities like Stack Overflow. I also attend webinars and local meetups whenever possible."
+    "answer": "I subscribe to multiple developer channels on YouTube to keep up to date. Fireship is a popular example that I find effectively explains new concepts in a concise manner. \n\nOnce I've discovered a new concept or technology I'll read up on the documentation and try it out when I have the time."
   },
   {
     "id": "10",
     "title": "Describe your experience with version control systems.",
-    "answer": "I have extensive experience using Git for version control. I regularly use branching strategies for features and bug fixes, and I am comfortable with collaborative workflows on platforms like GitHub."
+    "answer": "My degree heavily emphasised the use of Git and I've been using it at the command line for more than three years now. I've worked collaboratively with Git, using branching strategies for features and bug fixes, and submitting pull requests for completed changes. \n\nFor my degree I primarily used GitLab, but I have a variety of open source projects available on my GitHub account that demonstrate my competence."
   },
   {
     "id": "11",
     "title": "Can you describe a time when you had to learn a new technology quickly?",
-    "answer": "When my team decided to switch to a new JavaScript framework, I took the initiative to learn it by completing online courses and building a small project. This helped me contribute effectively to the team."
+    "answer": "In one of my contracts for KSR, I was tasked with deploying an AI application to AWS Elastic Beanstalk, which I had not used before. To learn quickly, I started by watching YouTube tutorials to get a basic overview. After this I read through the relevant documentation and started working.\n\nI encountered an issue where the upload would time out when attempting to deploy the full application. To resolve this I consulted Stack Overflow and found that it was due to the size of the application exceeding available space. I resolved this and successfully deployed the software."
   },
   {
     "id": "12",
@@ -71,8 +71,8 @@
   },
   {
     "id": "15",
-    "title": "What is your experience with Agile methodologies?",
-    "answer": "I have worked in Agile environments where we followed Scrum practices. I participated in daily stand-ups, sprint planning, and retrospectives, which helped improve team collaboration and project delivery."
+    "title": "What is the difference between let, const, and var in JavaScript?",
+    "answer": "Using var was the original way to declare variables in JavaScript. It is function-scoped, which means that it is only accessible within the function where it is declared. Both let and const are block-scoped, which means they only exist within the nearest pair of curly braces. \n\nAttempting to access a var before it is defined will return undefined. Attempting to access let and const will throw a ReferenceError. Const cannot be changed once defined."
   },
   {
     "id": "16",
@@ -96,6 +96,106 @@
   },
   {
     "id": "20",
+    "title": "What is your greatest professional achievement?",
+    "answer": "Reduced costs by 97% without any adverse effects on usage - AI project\n\nMy greatest professional achievement was leading a project that increased our application's user engagement by 30% through implementing new features based on user feedback. It was rewarding to see our efforts directly impact users."
+  },
+  {
+    "id": "31",
+    "title": "Tell me about yourself.",
+    "answer": "I am fullstack web developer who has been building websites for over three years now. I have a strong background in React and use Figma and CSS to deliver websites with responsive layouts.\n\nI have deployed software to multiple cloud providers, including AWS Elastic Beanstalk and Firebase. I'm experienced with Node.js having used it with Express and Firebase Functions.\n\nI'm UX focused and enjoy developing front end interfaces. Design is very important to me, to the extent that I have developed my own icon set for one of my projects."
+  },
+  {
+    "id": "32",
+    "title": "What are your strengths?",
+    "answer": "One of my key strengths is my problem-solving ability. I enjoy tackling complex challenges and finding efficient solutions. I am also a quick learner, which helps me adapt to new technologies and frameworks."
+  },
+  {
+    "id": "33",
+    "title": "What are your weaknesses?",
+    "answer": "I struggle to let go of projects I have worked on. With contract work, even after a projects has been delivered, I keep thinking of ways to further optimise or improve it. \n\nAt this point, the work has already been finished and it's not worth another contract for a small optimisation fix. I find it frustrating when I have to keep switching projects."
+  },
+  {
+    "id": "34",
+    "title": "Tell me about a time you showed leadership",
+    "answer": "After basic militarisation in the UAS, I joined a Fieldcraft course that included a 3 day blank firing exercise in the Yorkshire Moors.\n\nOn the first day of the exercise, we were tasked to walk as a squad through a valley where we going to be ambushed.\n\nWe had been taught the tactics to respond to this and had practiced firing the weapons but this was the first time to experience them together.\n\nOthers were hesitant to lead the squad so I volunteered and, at the time of the ambush, I found that the training I had been given was adequate to withdraw the squad to a safe position.\n\nI found it an excellent opportunity to test what I had learned under pressure, as well as good test of my verbal and non-verbal communication skills."
+  },
+  {
+    "id": "35",
+    "title": "Describe a challenging project you worked on.",
+    "answer": "One of my most challenging projects has been Hiking Network. My goal was to deploy a route planning application that could run with up to 5,000 users a month without costing me anything.\n\nThis required careful optimisation. For example, Mapbox, used to load and render the map, provides an option to pay per map load, so the application was built around a single map that loads once per user.\n\nFor images, I bundled a low resolution version with the code and dynamically loaded the higher resolution version from a storage bucket at runtime, using a CSS transition to smoothly fade between them. This decreased hosting usage without increasing load times.\n\nIt's in beta testing at the moment and usage has aligned with the 5,000 user a month goal."
+  },
+  {
+    "id": "36",
+    "title": "How do you prioritize your tasks?",
+    "answer": "When I've worked on my own software projects, I use issues on GitHub to prioritise tasks. Anything that needs doing is added to the issues and urgent tasks are given a priority tag. \n\nIn contract work, I've provided a document outlining what tasks are necessary and what can be done if there's time to spare.\n\nI find it useful to always have an idea of what needs to be done next."
+  },
+  {
+    "id": "37",
+    "title": "How do you handle feedback?",
+    "answer": "I'm very positive in response to feedback as it's an opportunity to improve based on new information. Advice or constructive criticism is very useful as it enables me to deliver results more efficiently."
+  },
+  {
+    "id": "38",
+    "title": "What technologies are you most comfortable with?",
+    "answer": "I am most comfortable with JavaScript, React, and Firebase for front-end development. For back-end, I have experience with Node.js and Express, along with databases like Firestore."
+  },
+  {
+    "id": "39",
+    "title": "How do you stay updated with industry trends?",
+    "answer": "I regularly read industry blogs, follow influential developers on social media, and participate in online communities like Stack Overflow. I also attend webinars and local meetups whenever possible."
+  },
+  {
+    "id": "40",
+    "title": "Describe your experience with version control systems.",
+    "answer": "I have extensive experience using Git for version control. I regularly use branching strategies for features and bug fixes, and I am comfortable with collaborative workflows on platforms like GitHub."
+  },
+  {
+    "id": "41",
+    "title": "Can you describe a time when you had to learn a new technology quickly?",
+    "answer": "When my team decided to switch to a new JavaScript framework, I took the initiative to learn it by completing online courses and building a small project. This helped me contribute effectively to the team."
+  },
+  {
+    "id": "42",
+    "title": "How do you approach debugging?",
+    "answer": "I approach debugging methodically by reproducing the issue, analyzing error messages, and using tools like console logging and debugging software to trace the source of the problem."
+  },
+  {
+    "id": "43",
+    "title": "What is your experience with responsive design?",
+    "answer": "I have designed and implemented responsive layouts using CSS media queries and frameworks like Bootstrap. I ensure that applications are mobile-friendly and provide a consistent user experience across devices."
+  },
+  {
+    "id": "44",
+    "title": "How do you ensure code quality?",
+    "answer": "I prioritize code quality by writing clean, maintainable code, using linters, and adhering to coding standards. I also participate in code reviews and write unit tests to validate functionality."
+  },
+  {
+    "id": "45",
+    "title": "What is your experience with Agile methodologies?",
+    "answer": "I have worked in Agile environments where we followed Scrum practices. I participated in daily stand-ups, sprint planning, and retrospectives, which helped improve team collaboration and project delivery."
+  },
+  {
+    "id": "46",
+    "title": "How do you handle tight deadlines?",
+    "answer": "I handle tight deadlines by breaking tasks into manageable chunks and focusing on the most critical features first. I also communicate proactively with my team to ensure we are aligned on priorities."
+  },
+  {
+    "id": "47",
+    "title": "What are your career goals?",
+    "answer": "My career goals include continuing to develop my technical skills, taking on more leadership responsibilities, and ultimately contributing to projects that have a positive social impact."
+  },
+  {
+    "id": "48",
+    "title": "Can you explain a technical concept to a non-technical person?",
+    "answer": "Absolutely. For example, I can explain APIs as being similar to a restaurant menu. The menu provides a list of dishes you can order, and when you request a dish, the kitchen prepares it for you without you needing to know how to cook it."
+  },
+  {
+    "id": "49",
+    "title": "How do you approach teamwork?",
+    "answer": "I approach teamwork with an open mind and a collaborative spirit. I value each team member's input and strive to create an inclusive environment where everyone feels comfortable sharing their ideas."
+  },
+  {
+    "id": "50",
     "title": "What is your greatest professional achievement?",
     "answer": "My greatest professional achievement was leading a project that increased our application's user engagement by 30% through implementing new features based on user feedback. It was rewarding to see our efforts directly impact users."
   }

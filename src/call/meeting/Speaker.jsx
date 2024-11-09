@@ -24,7 +24,7 @@ const Speaker = () => {
       }
 
       return trimmedWord.replace(/(?<=\w)[-.]+(?=\w)/g, ' ') + punctuation;
-    }).join(' ').replace(/\bjs\b/g, 'J S');
+    }).join(' ').replace(/\bjs\b/g, 'J S').replace(/,/g, ' ');
   };
 
   const playNextAudio = () => {

@@ -85,7 +85,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
                 pushVmState(status);
                 const newApiPath = `http://${externalIp}:5000`;
                 setTtsApiPath(newApiPath);
-                const flaskStatus = await awaitFlaskStatus(newApiPath, 30000);
+                const flaskStatus = await awaitFlaskStatus(newApiPath, 60000);
                 pushVmState(flaskStatus.status);
             } else {
                 pushVmState("STARTING");
@@ -95,7 +95,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
                 const newApiPath = `http://${apiStatus.externalIp}:5000`;
                 setTtsApiPath(newApiPath);
 
-                const flaskStatus = await awaitFlaskStatus(newApiPath, 30000);
+                const flaskStatus = await awaitFlaskStatus(newApiPath, 60000);
                 pushVmState(flaskStatus.status);
             }
         } catch (error) {

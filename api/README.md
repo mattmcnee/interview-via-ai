@@ -125,3 +125,29 @@ python3 app.py
 ```
 realpath app.py
 ```
+
+## Cuda
+
+This is a log of some of the commands used to update nvidia drivers. It is not a set of intructions.
+
+```
+sudo apt remove --purge '^nvidia-.*'
+sudo apt autoremove
+sudo apt clean
+```
+
+```
+sudo apt install nvidia-driver
+```
+
+```
+dpkg -l | grep nvidia-driver
+```
+
+```
+sudo apt install nvidia-driver-cuda=565.57.01-1 \
+                nvidia-kernel-support=565.57.01-1 \
+                libnvidia-ml1=565.57.01-1 \
+                nvidia-kernel-dkms=565.57.01-1
+
+```

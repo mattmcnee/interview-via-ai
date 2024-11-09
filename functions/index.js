@@ -41,6 +41,8 @@ const authenticateRequest = (req, apiKey, method) => {
         throw new Error('Invalid method. Must be either "GET" or "POST"');
     }
 
+    console.log('Payload:', payloadString);
+
     const hmac = crypto.createHmac('sha256', apiKey);
     hmac.update(payloadString);
     const expectedSignature = hmac.digest('hex');
@@ -313,6 +315,16 @@ exports.awaitVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).h
 exports.awaitFlaskStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {
+            const orderedParams = {};
+            Object.keys(req.query).sort().forEach(key => {
+                orderedParams[key] = req.query[key];
+            });
+            payloadString = JSON.stringify(orderedParams);
+            console.log('Payload:', payloadString);
+
+
+
+
             // early returns if wrong method or invalid signature
             const VALID_METHOD = 'GET';
             const apiKey = process.env.FUNCTIONS_API_KEY;

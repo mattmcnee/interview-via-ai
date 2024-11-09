@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import LoadingBar from '/src/components/LoadingBar';
 import HexagonButton from '/src/components/HexagonButton';
+import { api } from '/src/utils/api';
 
 const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
     const [message, setMessage] = useState("Warming up the voice box...");
@@ -39,7 +40,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
 
     const awaitVMStatus = async (targetStatus, timeout = 30000) => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/awaitVMStatus`, {
+            const response = await api.get(`${import.meta.env.VITE_API_URL}/awaitVMStatus`, {
                 params: {
                     target: targetStatus,
                     timeout
@@ -56,7 +57,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
 
     const awaitFlaskStatus = async (apiPath, timeout = 30000) => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/awaitFlaskStatus`, {
+            const response = await api.get(`${import.meta.env.VITE_API_URL}/awaitFlaskStatus`, {
                 params: {
                     apiPath,
                     timeout
@@ -79,7 +80,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
         pushVmState('INITIALISING');
         
         try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/startVM`);
+            const response = await api.post(`${import.meta.env.VITE_API_URL}/startVM`);
             const { success, message, status, externalIp } = response.data;
 
             if (status === 'RUNNING') {

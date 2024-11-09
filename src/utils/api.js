@@ -2,30 +2,27 @@ import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
 export const api = {
-    // converts integer values to string
-    stringifyPayload: (payload) => {
-        const result = {};
-        for (let key in payload) {
-            if (payload.hasOwnProperty(key)) {
-                result[key] = String(payload[key]);
-            }
-        }
-        return result;
-    },
 
     // abstracted axios GET request with HMAC signature
     get: async (url, payload) => {
         try {
             // get the secret key and convert payload to string
             const secretKey = import.meta.env.VITE_API_KEY;
-            const payloadString = JSON.stringify(api.stringifyPayload(payload));
+            const paramsPayload = payload.params || payload;
 
             // sort the payload keys alphabetically
             const orderedPayload = {};
-            const sortedKeys = Object.keys(payload).sort();
+            const sortedKeys = Object.keys(paramsPayload).sort();
             sortedKeys.forEach(key => {
-                orderedPayload[key] = payload[key];
+                if (typeof paramsPayload[key] === 'number') {
+                    orderedPayload[key] = String(paramsPayload[key]);
+                } else {
+                    orderedPayload[key] = paramsPayload[key];
+                }
             });
+
+            const payloadString = JSON.stringify(orderedPayload);
+            console.log("Payload:", payloadString);
 
             // generate HMAC signature
             const hmac = CryptoJS.HmacSHA256(payloadString, secretKey);
@@ -40,7 +37,7 @@ export const api = {
                 },
             });
 
-            return response.data;
+            return response;
         } catch (error) {
             console.error("Error:", error.response ? error.response.data : error.message);
             throw error;
@@ -52,13 +49,13 @@ export const api = {
         try {
             // get the secret key and convert payload to string
             const secretKey = import.meta.env.VITE_API_KEY;
-            const stringifiedPayload = api.stringifyPayload(payload);
-            
+            const paramsPayload = payload.params || payload;
+
             // sort the payload keys alphabetically
             const orderedPayload = {};
-            const sortedKeys = Object.keys(stringifiedPayload).sort();
+            const sortedKeys = Object.keys(paramsPayload).sort();
             sortedKeys.forEach(key => {
-                orderedPayload[key] = stringifiedPayload[key];
+                orderedPayload[key] = paramsPayload[key];
             });
 
             // generate HMAC signature
@@ -74,7 +71,7 @@ export const api = {
                 },
             });
 
-            return response.data;
+            return response;
         } catch (error) {
             console.error("Error:", error.response ? error.response.data : error.message);
             throw error;

@@ -1,51 +1,20 @@
 import React from 'react';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
+import { api } from '/src/utils/api';
 
 const FunctionsTest = () => {
-    const secretKey = import.meta.env.VITE_API_KEY;
-
-    const stringifyPayload = (payload) => {
-        const result = {};
-        for (let key in payload) {
-            if (payload.hasOwnProperty(key)) {
-                result[key] = String(payload[key]); // Explicitly convert each value to a string
-            }
-        }
-        return result;
-    };
 
     // Function to sign and call awaitVMStatus
     const awaitVMStatus = async (targetStatus, timeout = 50) => {
+        const payload = { target: targetStatus, timeout };
+    
         try {
-            // Prepare payload and create signature
-            const payload = stringifyPayload({ target: targetStatus, timeout });
-            const orderedPayload = {};
-            Object.keys(payload).sort().forEach(key => {
-                orderedPayload[key] = payload[key];
-            });
-        
-            const payloadString = JSON.stringify(orderedPayload);
-
-            console.log("Payload:", payloadString);
-
-            const hmac = CryptoJS.HmacSHA256(payloadString, secretKey);
-            const signature = hmac.toString(CryptoJS.enc.Hex);
-        
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/awaitVMStatus`, {
-                params: orderedPayload,
-                headers: {
-                    'X-Signature': signature,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            return response.data;
+            const status = await api.get(`${import.meta.env.VITE_API_URL}/awaitVMStatus`, payload);
+            return status;
         } catch (error) {
-            console.error("Error:", error.response ? error.response.data : error.message);
-            // Assuming pushVmState is available in scope to handle errors
-            pushVmState('ERROR');
-            throw error;
+            console.error("Failed to get VM Status");
+            throw error; // Rethrow error for further handling
         }
     };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { api } from '/src/utils/api';
 
 import { useAudioCall } from './AudioCallContext';
 
@@ -63,7 +64,7 @@ const Responder = () => {
         try {
             const topK = 3; // number of similar documents to retrieve
 
-            const result = await axios.post(`${import.meta.env.VITE_API_URL}/getSimilarDocuments`, {
+            const result = await api.post(`${import.meta.env.VITE_API_URL}/getSimilarDocuments`, {
                 topK,
                 text: "",
                 preprompt,

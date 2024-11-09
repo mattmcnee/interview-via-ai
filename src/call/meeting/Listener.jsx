@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { api } from '/src/utils/api';
 import { useAudioCall } from './AudioCallContext';
 import Display from './Display';
 
@@ -128,7 +129,7 @@ const Listener = () => {
             const base64Audio = reader.result.split(',')[1];
 
             try {
-                const result = await axios.post(`${import.meta.env.VITE_API_URL}/getTextFromAudioBatch`, {
+                const result = await api.post(`${import.meta.env.VITE_API_URL}/getTextFromAudioBatch`, {
                     filename: 'recording.webm',
                     encoding: 'OPUS',
                     sampleRateHertz: sampleRate,

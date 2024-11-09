@@ -25,10 +25,41 @@ const corsHandler = cors({
     origin: true,
 });
 
+const authenticateRequest = (req, apiKey, method) => {
+    let payloadString;
+    
+    if (method === 'GET') {
+        // sort the query parameters to ensure consistent ordering
+        const orderedParams = {};
+        Object.keys(req.query).sort().forEach(key => {
+            orderedParams[key] = req.query[key];
+        });
+        payloadString = JSON.stringify(orderedParams);
+    } else if (method === 'POST') {
+        payloadString = JSON.stringify(req.body);
+    } else {
+        throw new Error('Invalid method. Must be either "GET" or "POST"');
+    }
+
+    const hmac = crypto.createHmac('sha256', apiKey);
+    hmac.update(payloadString);
+    const expectedSignature = hmac.digest('hex');
+    
+    const signature = req.headers['x-signature'];
+    return signature === expectedSignature;
+};
+
 exports.startVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {
-            // Manually instantiate the Compute client with service account credentials
+            // early returns if wrong method or invalid signature
+            const VALID_METHOD = 'POST';
+            const apiKey = process.env.FUNCTIONS_API_KEY;
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: 'Method not allowed' });
+            if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
+
+
+            // manually instantiate the Compute client with service account credentials
             const serviceAccount = JSON.parse(Buffer.from(process.env.VM_SERVICE_ACCOUNT, 'base64').toString());
             const computeClient = new InstancesClient({
                 credentials: serviceAccount,
@@ -87,6 +118,11 @@ exports.startVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.o
 exports.stopVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {
+            const VALID_METHOD = 'POST';
+            const apiKey = process.env.FUNCTIONS_API_KEY;
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: 'Method not allowed' });
+            if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
+
             // Manually instantiate the Compute client with service account credentials
             const serviceAccount = JSON.parse(Buffer.from(process.env.VM_SERVICE_ACCOUNT, 'base64').toString());
             const computeClient = new InstancesClient({
@@ -259,44 +295,15 @@ exports.getVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).htt
 //     });
 // });
 
-const authenticateRequest = (req, postKey) => {
-    const payloadString = JSON.stringify(req.body);
-    const hmac = crypto.createHmac('sha256', postKey);
-    hmac.update(payloadString);
-    const expectedSignature = hmac.digest('hex');
-    
-    const signature = req.headers['x-signature']; // Signature sent from frontend
-
-    // Return true if signatures match, otherwise false
-    return signature === expectedSignature;
-};
-
-const authenticateGetRequest = (req, postKey) => {
-    // Sort the query parameters to ensure consistent ordering
-    const orderedParams = {};
-    Object.keys(req.query).sort().forEach(key => {
-        orderedParams[key] = req.query[key];
-    });
-    
-    const payloadString = JSON.stringify(orderedParams);
-
-    console.log(payloadString);
-
-    const hmac = crypto.createHmac('sha256', postKey);
-    hmac.update(payloadString);
-    const expectedSignature = hmac.digest('hex');
-
-    const signature = req.headers['x-signature'];
-    return signature === expectedSignature;
-};
-
 exports.awaitVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {
-            const postKey = process.env.FUNCTIONS_API_KEY;
-            if (!authenticateGetRequest(req, postKey)) {
-                return res.status(401).json({ error: 'Invalid signature' });
-            }
+            // early returns if wrong method or invalid signature
+            const VALID_METHOD = 'GET';
+            const apiKey = process.env.FUNCTIONS_API_KEY;
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: 'Method not allowed' });
+            if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
+
 
             const timeout = parseInt(req.query.timeout) || 30000; // Default 30s timeout
             const targetStatus = req.query.target;

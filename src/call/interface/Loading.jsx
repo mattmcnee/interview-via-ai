@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import LoadingBar from '/src/components/LoadingBar';
 import HexagonButton from '/src/components/HexagonButton';
 import { api } from '/src/utils/api';
@@ -7,15 +6,15 @@ import { api } from '/src/utils/api';
 const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
     const [message, setMessage] = useState("Warming up the voice box...");
     const [vmStatus, setVmStatus] = useState('');
+    const [isLoading, setIsLoading] = useState(false); // Track loading state to prevent re-triggering the API calls
+    const loadingStarted = useRef(false); // Track first render
 
     const pushVmState = useCallback((newStatus) => {
         setVmStatus(currentStatus => {
-            // If current status is ACTIVE, ignore all further updates
             if (currentStatus === 'ACTIVE') {
                 return currentStatus;
             }
-    
-            // Set friendly messages based on state
+
             switch (newStatus) {
                 case 'INITIALISING':
                     setMessage("Warming up the voice box...");
@@ -33,7 +32,7 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
                     setMessage("Timed out loading model. Please try again later.");
                     break;
             }
-    
+
             return newStatus;
         });
     }, []);
@@ -46,7 +45,6 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
                     timeout
                 }
             });
-
             return response.data;
         } catch (error) {
             console.error("Error:", error.response ? error.response.data : error.message);
@@ -63,7 +61,6 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
                     timeout
                 }
             });
-
             return response.data;
         } catch (error) {
             console.error("Error checking Flask API status:", error.response ? error.response.data : error.message);
@@ -73,12 +70,13 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
     };
 
     const handleStartVM = useCallback(async () => {
-        if (vmStatus === 'ACTIVE') {
+        if (vmStatus === 'ACTIVE' || isLoading) {
             return;
         }
 
+        setIsLoading(true);
         pushVmState('INITIALISING');
-        
+
         try {
             const response = await api.post(`${import.meta.env.VITE_API_URL}/startVM`);
             const { success, message, status, externalIp } = response.data;
@@ -103,18 +101,22 @@ const Loading = ({ setMeetingState, ttsApiPath, setTtsApiPath }) => {
         } catch (error) {
             console.error('Error starting VM:', error);
             pushVmState('ERROR');
+        } finally {
+            setIsLoading(false);
         }
-    }, [setMeetingState, setTtsApiPath, vmStatus, pushVmState]);
+    }, [setMeetingState, setTtsApiPath, vmStatus, pushVmState, isLoading]);
 
     useEffect(() => {
-        if (vmStatus === '') {
-            handleStartVM();
+        if (loadingStarted.current == false) {
+            loadingStarted.current = true;
+            if (vmStatus === '' && !isLoading) {
+                handleStartVM();
+            }
         }
-    }, [handleStartVM]);
+    }, [handleStartVM, vmStatus, isLoading]);
 
     return (
         <div className="" style={{display:'flex', flexDirection: 'column', alignItems: 'flex-start', maxWidth: '860px', margin: ' 0 auto', height: '100vh', padding: '50px 30px'}}>
-            {/* <HexagonButton fill={false} action={() => setMeetingState('entry')} text="Back" size={60} textWidth={40} backgroundColor="#ccc" color="#000" /> */}
             <div style={{display: 'flex', flexDirection: 'column', flex: '1', justifyContent: 'center'}}>
                 <p style={{margin:'4px 0'}}>This is a proof of concept and is not quite realtime. Expect responses to take 1-3 seconds.</p>
                 <p style={{margin:'4px 0'}}>Interruptions are currently not supported. Wait until the model has finished speaking before asking your next question.</p>

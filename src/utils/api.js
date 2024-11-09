@@ -1,41 +1,37 @@
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
-// Set the secret key from environment variables
-const secretKey = import.meta.env.VITE_API_KEY;
-
-// Utility object for API requests
 export const api = {
-    // Function to stringify the payload
+    // converts integer values to string
     stringifyPayload: (payload) => {
         const result = {};
         for (let key in payload) {
             if (payload.hasOwnProperty(key)) {
-                result[key] = String(payload[key]); // Explicitly convert each value to a string
+                result[key] = String(payload[key]);
             }
         }
         return result;
     },
 
-    // Function to make GET requests with HMAC SHA256 signature
+    // abstracted axios GET request with HMAC signature
     get: async (url, payload) => {
         try {
-            // Stringify the payload inside the API object
+            // get the secret key and convert payload to string
+            const secretKey = import.meta.env.VITE_API_KEY;
             const payloadString = JSON.stringify(api.stringifyPayload(payload));
 
+            // sort the payload keys alphabetically
             const orderedPayload = {};
             const sortedKeys = Object.keys(payload).sort();
-            
-            // Sort the payload keys
             sortedKeys.forEach(key => {
                 orderedPayload[key] = payload[key];
             });
 
-            // Generate HMAC signature
+            // generate HMAC signature
             const hmac = CryptoJS.HmacSHA256(payloadString, secretKey);
             const signature = hmac.toString(CryptoJS.enc.Hex);
 
-            // Make the GET request with the signature in the headers
+            // make the GET request with the signature in the headers
             const response = await axios.get(url, {
                 params: orderedPayload,
                 headers: {
@@ -47,7 +43,41 @@ export const api = {
             return response.data;
         } catch (error) {
             console.error("Error:", error.response ? error.response.data : error.message);
-            throw error; // Propagate the error to handle it in the calling function
+            throw error;
+        }
+    },
+
+    // abstracted axios POST request with HMAC signature
+    post: async (url, payload = {}) => {
+        try {
+            // get the secret key and convert payload to string
+            const secretKey = import.meta.env.VITE_API_KEY;
+            const stringifiedPayload = api.stringifyPayload(payload);
+            
+            // sort the payload keys alphabetically
+            const orderedPayload = {};
+            const sortedKeys = Object.keys(stringifiedPayload).sort();
+            sortedKeys.forEach(key => {
+                orderedPayload[key] = stringifiedPayload[key];
+            });
+
+            // generate HMAC signature
+            const payloadString = JSON.stringify(orderedPayload);
+            const hmac = CryptoJS.HmacSHA256(payloadString, secretKey);
+            const signature = hmac.toString(CryptoJS.enc.Hex);
+
+            // make the POST request with the signature in the headers
+            const response = await axios.post(url, orderedPayload, {
+                headers: {
+                    'X-Signature': signature,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            return response.data;
+        } catch (error) {
+            console.error("Error:", error.response ? error.response.data : error.message);
+            throw error;
         }
     },
 };

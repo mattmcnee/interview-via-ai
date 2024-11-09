@@ -1,38 +1,56 @@
 import React from 'react';
-import axios from 'axios';
-import CryptoJS from 'crypto-js';
 import { api } from '/src/utils/api';
 
-const FunctionsTest = () => {
+// Function to stop VM
+const stopVM = async () => {
+    try {
+        const response = await api.post(`${import.meta.env.VITE_API_URL}/stopVM`);
+        console.log("VM stopped:", response);
+    } catch (error) {
+        console.error("Failed to stop VM:", error);
+    }
+};
 
-    // Function to sign and call awaitVMStatus
-    const awaitVMStatus = async (targetStatus, timeout = 50) => {
-        const payload = { target: targetStatus, timeout };
-    
+// Function to await VM status
+const awaitVMStatus = async (targetStatus, timeout = 50) => {
+    try {
+        // Prepare the query parameters
+        const params = { target: targetStatus, timeout };
+        const response = await api.get(`${import.meta.env.VITE_API_URL}/awaitVMStatus`, params);
+        console.log("VM status awaited:", response);
+    } catch (error) {
+        console.error("Failed to await VM status:", error);
+    }
+};
+
+const FunctionsTest = () => {
+    // Handler for the stop VM button click
+    const handleStopButtonClick = async () => {
         try {
-            const status = await api.get(`${import.meta.env.VITE_API_URL}/awaitVMStatus`, payload);
-            return status;
+            await stopVM();
         } catch (error) {
-            console.error("Failed to get VM Status");
-            throw error; // Rethrow error for further handling
+            console.error("Failed to stop VM");
         }
     };
 
-    // Handler for button click
-    const handleButtonClick = async () => {
+    // Handler for the await VM status button click
+    const handleAwaitButtonClick = async () => {
         try {
-            const status = await awaitVMStatus('TARGET_STATUS'); // Replace 'TARGET_STATUS' with the actual target
-            console.log("VM Status:", status);
+            const targetStatus = "running"; // Example target status
+            const timeout = 50; // Example timeout value
+            await awaitVMStatus(targetStatus, timeout);
         } catch (error) {
-            console.error("Failed to get VM Status");
+            console.error("Failed to await VM status");
         }
     };
 
     return (
         <div>
-            <button onClick={handleButtonClick}>Check VM Status</button>
+            <button onClick={handleStopButtonClick}>Stop VM</button>
+            <button onClick={handleAwaitButtonClick}>Await VM Status</button>
         </div>
     );
 };
 
 export default FunctionsTest;
+

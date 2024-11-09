@@ -55,7 +55,7 @@ exports.startVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.o
             // early returns if wrong method or invalid signature
             const VALID_METHOD = 'POST';
             const apiKey = process.env.FUNCTIONS_API_KEY;
-            if (req.method !== VALID_METHOD) return res.status(405).json({ error: 'Method not allowed' });
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: `Method not allowed. Allowed methods: ${VALID_METHOD}` });
             if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
 
 
@@ -118,9 +118,10 @@ exports.startVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.o
 exports.stopVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {
+            // early returns if wrong method or invalid signature
             const VALID_METHOD = 'POST';
             const apiKey = process.env.FUNCTIONS_API_KEY;
-            if (req.method !== VALID_METHOD) return res.status(405).json({ error: 'Method not allowed' });
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: `Method not allowed. Allowed methods: ${VALID_METHOD}` });
             if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
 
             // Manually instantiate the Compute client with service account credentials
@@ -183,6 +184,13 @@ exports.stopVM = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.on
 exports.getVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {
+            // early returns if wrong method or invalid signature
+            const VALID_METHOD = 'GET';
+            const apiKey = process.env.FUNCTIONS_API_KEY;
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: `Method not allowed. Allowed methods: ${VALID_METHOD}` });
+            if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
+
+
             // Manually instantiate the Compute client with service account credentials
             const serviceAccount = JSON.parse(Buffer.from(process.env.VM_SERVICE_ACCOUNT, 'base64').toString());
             const computeClient = new InstancesClient({
@@ -224,84 +232,13 @@ exports.getVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).htt
     });
 });
 
-// exports.awaitVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
-//     corsHandler(req, res, async () => {
-//         try {
-//             const timeout = parseInt(req.query.timeout) || 30000; // Default 30s timeout
-//             const targetStatus = req.query.target;
-            
-//             if (!targetStatus) {
-//                 throw new Error("Target status must be specified");
-//             }
-
-//             // Manually instantiate the Compute client with service account credentials
-//             const serviceAccount = JSON.parse(Buffer.from(process.env.VM_SERVICE_ACCOUNT, 'base64').toString());
-//             const computeClient = new InstancesClient({
-//                 credentials: serviceAccount,
-//             });
-
-//             // Configuration variables
-//             const projectId = functions.config().vm.project;
-//             const zone = functions.config().vm.zone;
-//             const instanceName = functions.config().vm.id;
-
-//             const startTime = Date.now();
-//             let currentStatus = null;
-//             let currentExternalIp = "blank";
-
-//             // Poll every 200ms until timeout or target status is reached
-//             while (Date.now() - startTime < timeout) {
-//                 const [metadata] = await computeClient.get({
-//                     project: projectId,
-//                     zone: zone,
-//                     instance: instanceName,
-//                 });
-
-//                 currentStatus = metadata.status;
-                
-//                 const networkInterfaces = metadata.networkInterfaces || [];
-//                 currentExternalIp = networkInterfaces.length > 0 && networkInterfaces[0].accessConfigs
-//                     ? networkInterfaces[0].accessConfigs[0].natIP
-//                     : "blank";
-
-//                 if (currentStatus === targetStatus) {
-//                     return res.json({
-//                         success: true,
-//                         message: `VM ${instanceName} reached target status: ${targetStatus}`,
-//                         status: currentStatus,
-//                         externalIp: currentExternalIp
-//                     });
-//                 }
-
-//                 // Wait 200ms before next check
-//                 await new Promise(resolve => setTimeout(resolve, 200));
-//             }
-
-//             // If we get here, we've timed out
-//             res.json({
-//                 success: false,
-//                 message: `Timeout reached before VM ${instanceName} reached status: ${targetStatus}`,
-//                 status: currentStatus,
-//                 externalIp: currentExternalIp,
-//                 timeoutReached: true
-//             });
-//         } catch (error) {
-//             console.error('Error:', error);
-//             res.status(500).json({
-//                 success: false,
-//                 error: error.message
-//             });
-//         }
-//     });
-// });
-
 exports.awaitVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {
             // early returns if wrong method or invalid signature
             const VALID_METHOD = 'GET';
             const apiKey = process.env.FUNCTIONS_API_KEY;
-            if (req.method !== VALID_METHOD) return res.status(405).json({ error: 'Method not allowed' });
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: `Method not allowed. Allowed methods: ${VALID_METHOD}` });
             if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
 
 
@@ -376,6 +313,12 @@ exports.awaitVMStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).h
 exports.awaitFlaskStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }).https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {
+            // early returns if wrong method or invalid signature
+            const VALID_METHOD = 'GET';
+            const apiKey = process.env.FUNCTIONS_API_KEY;
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: `Method not allowed. Allowed methods: ${VALID_METHOD}` });
+            if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
+
             const timeout = parseInt(req.query.timeout) || 30000; // Default 30s timeout
             const apiPath = req.query.apiPath;
             
@@ -448,6 +391,12 @@ exports.awaitFlaskStatus = functions.runWith({ secrets: ["VM_SERVICE_ACCOUNT"] }
 exports.getEmbedding = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
+            // early returns if wrong method or invalid signature
+            const VALID_METHOD = 'POST';
+            const apiKey = process.env.FUNCTIONS_API_KEY;
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: `Method not allowed. Allowed methods: ${VALID_METHOD}` });
+            if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
+
             const { inputText } = req.body;
 
             // Step 1: Make a POST request to OpenAI embeddings endpoint
@@ -479,6 +428,12 @@ exports.getEmbedding = functions.https.onRequest((req, res) => {
 exports.upsertEmbedding = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
+            // early returns if wrong method or invalid signature
+            const VALID_METHOD = 'POST';
+            const apiKey = process.env.FUNCTIONS_API_KEY;
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: `Method not allowed. Allowed methods: ${VALID_METHOD}` });
+            if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
+
             const items = req.body;
             
             if (!Array.isArray(items)) {
@@ -550,6 +505,12 @@ exports.upsertEmbedding = functions.https.onRequest((req, res) => {
 exports.getSimilarDocuments = functions.runWith({ memory: "512MB" }).https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
       try {
+        // early returns if wrong method or invalid signature
+        const VALID_METHOD = 'POST';
+        const apiKey = process.env.FUNCTIONS_API_KEY;
+        if (req.method !== VALID_METHOD) return res.status(405).json({ error: `Method not allowed. Allowed methods: ${VALID_METHOD}` });
+        if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
+
 
         // Step 1: Encode the text as a vector using OpenAI API
 
@@ -588,22 +549,6 @@ exports.getSimilarDocuments = functions.runWith({ memory: "512MB" }).https.onReq
         const openai = new OpenAI({
             apiKey: openaiApiKey,
         });
-
-        // const ragResponse = await openai.chat.completions.create({
-        //     model: "gpt-4o-mini",
-        //     messages: [
-        //       {
-        //         role: "system",
-        //         content: preprompt
-        //       },
-        //       {
-        //         role: "user",
-        //         content: `Context:\n${related}\n\nQuestion: ${text}`
-        //       }
-        //     ],
-        //     temperature: 0.3,
-        //     max_tokens: 500
-        // });
 
         var messages = [...history];
 
@@ -646,6 +591,12 @@ exports.getSimilarDocuments = functions.runWith({ memory: "512MB" }).https.onReq
 exports.getTextFromAudioBatch = functions.https.onRequest(async (req, res) => {
     corsHandler(req, res, async () => {
         try {
+            // early returns if wrong method or invalid signature
+            const VALID_METHOD = 'POST';
+            const apiKey = process.env.FUNCTIONS_API_KEY;
+            if (req.method !== VALID_METHOD) return res.status(405).json({ error: `Method not allowed. Allowed methods: ${VALID_METHOD}` });
+            if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
+
             const base64Key = functions.config().speech_to_text.service_account_key;
             const jsonKey = Buffer.from(base64Key, 'base64').toString('utf8');
             const serviceAccount = JSON.parse(jsonKey);

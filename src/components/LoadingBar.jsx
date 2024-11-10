@@ -73,7 +73,7 @@ const LoadingBar = ({ message = "Initialising VM", isLoading = true, action }) =
                     display: 'flex', 
                     justifyContent: 'flex-start', 
                     alignItems: 'center', 
-                    height: "60px",
+                    height: "70px",
                     opacity: isLoading ? 1 : 0,
                     transition: 'opacity 0.2s ease'
                 }}>

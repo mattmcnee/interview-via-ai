@@ -64,16 +64,20 @@ const Responder = () => {
         try {
             const topK = 3; // number of similar documents to retrieve
 
+            console.log("AI Request:", recentMessages[recentMessages.length - 1]);
+
             const result = await api.post(`${import.meta.env.VITE_API_URL}/getSimilarDocuments`, {
                 topK,
-                text: "",
+                text: recentMessages[recentMessages.length - 1].content,
                 preprompt,
                 history: recentMessages
             });
 
             const responseMessage = result.data.message;
 
-            console.log(result.data.context)
+            console.log("AI Response:", result.data.message);
+
+            console.log("AI Context:", result.data.context.matches)
 
             return responseMessage; // Return the response message
         } catch (e) {

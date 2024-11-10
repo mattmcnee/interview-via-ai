@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.scss';
 import AudioCallPage from './call/AudioCallPage';
 import GoogleSignIn from '/src/tests/GoogleSignIn';
+import TextToSpeech from '/src/tests/TextToSpeech';
 
 function App() {
   return (
@@ -9,6 +10,7 @@ function App() {
       <Routes>
         <Route path="/" element={<AudioCallPage />} />
         <Route path="login" element={<GoogleSignIn />} />
+        <Route path="speech" element={<TextToSpeech />} />
       </Routes>
     </Router>
   );

@@ -549,7 +549,7 @@ exports.getSimilarDocuments = functions.runWith({ memory: "512MB" }).https.onReq
         const answer = await index.query({ topK: topK, vector: vector, includeMetadata: true });
 
         const related = answer.matches
-        .filter(match => match.score >= 0.2) // less than 0.2 is unlikely to be relevant
+        .filter(match => match.score >= 0.25) // less than 0.25 is unlikely to be relevant
         .map(match => 
             `Question: ${match.metadata.title}\nAnswer: ${match.metadata.answer}`
         )

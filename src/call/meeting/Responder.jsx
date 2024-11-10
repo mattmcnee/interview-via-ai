@@ -22,7 +22,6 @@ const Responder = () => {
     const normalizeText = text => text.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
 
     const getResponse = async () => {
-        console.log(transcriptRef.current);
 
 
         // Retrieve the last 20 messages and map them to the desired format
@@ -63,8 +62,6 @@ const Responder = () => {
 
         try {
             const topK = 3; // number of similar documents to retrieve
-
-            console.log("AI Request:", recentMessages[recentMessages.length - 1]);
 
             if (recentMessages[recentMessages.length - 1].role === "assistant") {
                 return null;

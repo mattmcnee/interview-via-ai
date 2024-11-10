@@ -185,7 +185,6 @@ const Listener = () => {
     const userSentences = useRef([]);
 
     const addSentenceIfUnique = (sentence, time) => {
-        console.log("Time:", time);
         if (sentence && !userSentences.current.includes(sentence)) {
             userSentences.current.push(sentence);
             // pushUserMessage({sentence, time: time + 1});

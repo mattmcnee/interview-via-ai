@@ -139,17 +139,17 @@ const Display = ({ handleStartRecording, handleStopRecording, isRecording, error
                     </button>
                 )}
 
-                <button className="mic-button">
+                {/* <button className="mic-button">
                     <img src={hourglassIcon} alt="Check Time" />
                     <div className="button-text">{formatTime(timer)} Remaining</div>
-                </button>
+                </button> */}
 
                 <button onClick={() => setMeetingState("recap")} className="mic-button">
                     <img src={exitIcon} alt="Exit meeting" />
                     <div className="button-text">Leave</div>
                 </button>
             </div>
-            } size={80} contentWidth={600} backgroundColor="#ddd" color="#000" fill={false} hoverable={false}/>
+            } size={80} contentWidth={400} backgroundColor="#ddd" color="#000" fill={false} hoverable={false}/>
             </div>
         </div>
     );

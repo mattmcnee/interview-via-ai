@@ -128,16 +128,6 @@ const Speaker = () => {
     });
 };
 
-// Test cases
-console.log(splitIntoSentences('I\'m not sure what you mean by "Division." Could you please clarify or provide more details?'));
-// Expected output: ['I\'m not sure what you mean by "Division"', 'Could you please clarify or provide more details']
-
-console.log(splitIntoSentences('This is version 1.0. This is another sentence.'));
-// Expected output: ['This is version 1.0', 'This is another sentence']
-
-console.log(splitIntoSentences('Hello Dr. Smith. How are you?'));
-
-
   useEffect(() => {
     playSpeakerRef.current = (transcript) => {
       setError('');
@@ -147,8 +137,6 @@ console.log(splitIntoSentences('Hello Dr. Smith. How are you?'));
 
       const sentences = splitIntoSentences(transcript);
       const newAudioUrls = [];
-
-      console.log("Sentences:", sentences);
 
       const fetchAudio = async (sentence) => {
         const fetchPromise = fetch(`${ttsApiPath}/generate`, {

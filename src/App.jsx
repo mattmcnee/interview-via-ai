@@ -3,6 +3,7 @@ import './App.scss';
 import AudioCallPage from './call/AudioCallPage';
 import GoogleSignIn from '/src/tests/GoogleSignIn';
 import TextToSpeech from '/src/tests/TextToSpeech';
+import AudioGenerator from '/src/AudioGenerator';
 
 function App() {
   return (

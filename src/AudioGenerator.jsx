@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { api } from '/src/utils/api';
 
-const TextToSpeech = () => {
+const AudioGenerator = () => {
   const [path, setPath] = useState('');
   const [text, setText] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
@@ -20,13 +19,8 @@ const TextToSpeech = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ path: `http://${path}:5000`, text }),
+        body: JSON.stringify({ path, text }),
       });
-
-      // const response = await api.post(`${import.meta.env.VITE_API_URL}/generateAudio`, { 
-      //   path: `http://${path}:5000`, 
-      //   text 
-      // });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -67,7 +61,7 @@ const TextToSpeech = () => {
             type="text"
             value={path}
             onChange={(e) => setPath(e.target.value)}
-            placeholder="34.16.177.112"
+            placeholder="https://api.example.com"
             required
             style={{
               width: '100%',
@@ -137,4 +131,4 @@ const TextToSpeech = () => {
   );
 };
 
-export default TextToSpeech;
+export default AudioGenerator;

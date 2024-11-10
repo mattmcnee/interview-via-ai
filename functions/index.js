@@ -681,26 +681,32 @@ exports.generateAudio = functions.https.onRequest(async (req, res) => {
   
         // Validate required fields
         if (!text || !path) {
-          return res.status(400).json({ error: 'No text provided' });
+          return res.status(400).json({ error: 'No text or path provided' });
         }
   
-        // Send the request to the external API with only the text field
-        const response = await axios.post(`${path}/generate`, { text }, {
+        // Set up fetch and timeout promises
+        const fetchPromise = fetch(`${path}/generate`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          responseType: 'arraybuffer', // To handle binary audio data
+          body: JSON.stringify({ text })
         });
   
-        // Check if the response is successful
-        if (response.status === 200) {
-          // Set headers for audio file download and return it
-          res.setHeader('Content-Type', 'audio/wav');
-          res.setHeader('Content-Disposition', 'inline; filename="tts.wav"');
-          
-          // Send the audio file as binary data
-          return res.send(response.data);
-        } else {
-          return res.status(response.status).json({ error: 'Failed to generate audio' });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Fetch timeout after 3 seconds')), 3000)
+        );
+  
+        // Race between fetch and timeout
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
+  
+        // Check if response is OK and is of type audio/wav
+        if (!response.ok || !response.headers.get('content-type').includes('audio/wav')) {
+          return res.status(response.status).json({ error: 'Failed to generate audio or unexpected response format.' });
         }
+  
+        // Handle binary audio response
+        const audioBuffer = await response.arrayBuffer();
+        res.setHeader('Content-Type', 'audio/wav');
+        return res.status(200).send(Buffer.from(audioBuffer));
   
       } catch (error) {
         console.error('Error generating audio:', error);
@@ -708,6 +714,8 @@ exports.generateAudio = functions.https.onRequest(async (req, res) => {
       }
     });
   });
+  
+  
   
 
 

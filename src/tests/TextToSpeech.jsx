@@ -15,26 +15,13 @@ const TextToSpeech = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/generateAudio`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ path: `http://${path}:5000`, text }),
-      });
-
-      // const response = await api.post(`${import.meta.env.VITE_API_URL}/generateAudio`, { 
-      //   path: `http://${path}:5000`, 
-      //   text 
-      // });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate audio');
-      }
+      const response = await api.post(`${import.meta.env.VITE_API_URL}/generateAudio`, { 
+        path: `http://${path}:5000`, 
+        text: text
+      }, 'blob');
 
       // Convert the response to a blob and create an object URL
-      const audioBlob = await response.blob();
+      const audioBlob = await response.data;
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
     } catch (err) {

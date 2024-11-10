@@ -142,7 +142,7 @@ const Speaker = () => {
       const fetchAudio = async (sentence) => {
         const fetchPromise = await api.post(`${import.meta.env.VITE_API_URL}/generateAudio`, { 
           path: ttsApiPath, 
-          text: sentence
+          text: processTextForTTS(sentence)
         }, 'blob');
 
         const timeoutPromise = new Promise((_, reject) => 

@@ -22,7 +22,6 @@ export const api = {
             });
 
             const payloadString = JSON.stringify(orderedPayload);
-            console.log("Payload:", payloadString);
 
             // generate HMAC signature
             const hmac = CryptoJS.HmacSHA256(payloadString, secretKey);

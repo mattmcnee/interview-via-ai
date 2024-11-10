@@ -58,7 +58,7 @@ const Responder = () => {
             content: preprompt
         });
 
-        console.log(recentMessages);
+        // console.log(recentMessages);
 
         try {
             const topK = 3; // number of similar documents to retrieve

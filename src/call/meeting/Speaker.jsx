@@ -140,10 +140,10 @@ const Speaker = () => {
       const newAudioUrls = [];
 
       const fetchAudio = async (sentence) => {
-        const fetchPromise = await api.post(`${import.meta.env.VITE_API_URL}/generateAudio`, {
-          text: processTextForTTS(sentence).trim(),
-          path: ttsApiPath
-        });
+        const fetchPromise = await api.post(`${import.meta.env.VITE_API_URL}/generateAudio`, { 
+          path: ttsApiPath, 
+          text: sentence
+        }, 'blob');
 
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Fetch timeout after 3 seconds')), 3000)
@@ -157,14 +157,11 @@ const Speaker = () => {
           try {
             const response = await fetchAudio(sentence);
       
-            console.log(response);
-      
             if (response.status !== 200) {
               throw new Error('Network response was not ok');
             }
       
-            // Convert the arraybuffer into a Blob
-            const audioBlob = new Blob([response.data], { type: 'audio/wav' });
+            const audioBlob = await response.data;
       
             // Create an object URL for the Blob
             const audioUrl = URL.createObjectURL(audioBlob);

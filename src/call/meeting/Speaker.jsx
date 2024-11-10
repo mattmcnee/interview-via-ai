@@ -11,7 +11,8 @@ const Speaker = () => {
 
   const cleanText = (text) => text.replace(/["“”‘’]/g, '').trimEnd();
 
-  // Process text for TTS
+
+
   const processTextForTTS = (text) => {
     return text.split(' ').map(word => {
       const trimmedWord = word.replace(/[.,!?;]$/, '');
@@ -65,30 +66,76 @@ const Speaker = () => {
     playNextAudio();
   }, [audioUrls, currentAudioIndex]);
 
+    // I'm not sure what you mean by "Division." Could you please clarify or provide more details?
+  // ['" Could you please clarify or provide more details?']
+
   const splitIntoSentences = (paragraph) => {
-    // replace any fullstops between letters with a temporary marker
-    const withProtectedFullstops = paragraph.replace(/(?<=\w)\.(?=\w)/g, '__FULLSTOP__');
+    if (!paragraph) return [];
+
+    // Common abbreviations that end with periods
+    const abbreviations = ['dr.', 'mr.', 'mrs.', 'ms.', 'prof.', 'sr.', 'jr.', 'etc.', 'inc.', 'ltd.', 'co.'];
+
+    // Create regex pattern for abbreviations
+    const abbrRegex = new RegExp(
+        `\\b(${abbreviations.join('|')})\\s+`,
+        'gi'
+    );
+
+    // Replace abbreviations with temporary marker
+    const withProtectedAbbr = paragraph.replace(
+        abbrRegex,
+        (match) => match.replace('.', '__ABBR__')
+    );
+
+    // Replace periods between letters/numbers with temporary marker
+    const withProtectedFullstops = withProtectedAbbr.replace(
+        /(?<=\w)\.(?=\w)/g,
+        '__FULLSTOP__'
+    );
+
+    // Split text into sentences, handling quotes properly
+    const sentenceRegex = /[^.!?]+[.!?]+/g;
+    const matches = withProtectedFullstops.match(sentenceRegex) || [];
+
+    // Process each sentence
+    const sentences = matches.map(sentence => {
+        return sentence
+            .trim()
+            .replace(/\./g, '')
+            // Restore protected abbreviations
+            .replace(/__FULLSTOP__/g, '.')
+            .replace(/__ABBR__/g, '.');
+    });
+
+    // Handle any remaining text
+    const lastIndex = matches.join('').length;
+    const remaining = withProtectedFullstops.slice(lastIndex).trim();
     
-    // split on sentence endings
-    const sentenceRegex = /[^.!?]+[.!?](?:\s|$)/g;
-    const sentences = withProtectedFullstops.match(sentenceRegex) || [];
-    
-    // handle any remaining text after the last ending punctuation
-    const lastPart = withProtectedFullstops.split(/[.!?](?:\s|$)/).pop();
-    
-    if (lastPart && lastPart.trim() !== '') {
-        sentences.push(lastPart.trim());
+    if (remaining) {
+        sentences.push(
+            remaining
+                .replace(/__FULLSTOP__/g, '.')
+                .replace(/__ABBR__/g, '.')
+        );
     }
 
-    // restore protected fullstops and remove ending punctuation
-    return sentences
-        .map(sentence => 
-            sentence
-                .trim()
-                .replace(/__FULLSTOP__/g, '.')
-                .replace(/[.]$/, '')
-        );
-  }
+    // Clean up quotation marks and spaces
+    return sentences.map(sentence => {
+        // Handle quotes at sentence boundaries
+        return sentence
+            .replace(/"/g, '')
+            .trim();
+    });
+};
+
+// Test cases
+console.log(splitIntoSentences('I\'m not sure what you mean by "Division." Could you please clarify or provide more details?'));
+// Expected output: ['I\'m not sure what you mean by "Division"', 'Could you please clarify or provide more details']
+
+console.log(splitIntoSentences('This is version 1.0. This is another sentence.'));
+// Expected output: ['This is version 1.0', 'This is another sentence']
+
+console.log(splitIntoSentences('Hello Dr. Smith. How are you?'));
 
 
   useEffect(() => {

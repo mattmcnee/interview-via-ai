@@ -66,6 +66,10 @@ const Responder = () => {
 
             console.log("AI Request:", recentMessages[recentMessages.length - 1]);
 
+            if (recentMessages[recentMessages.length - 1].role === "assistant") {
+                return null;
+            }
+
             const result = await api.post(`${import.meta.env.VITE_API_URL}/getSimilarDocuments`, {
                 topK,
                 text: recentMessages[recentMessages.length - 1].content,

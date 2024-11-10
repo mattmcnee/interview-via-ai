@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAudioCall } from './AudioCallContext';
+import { api } from '/src/utils/api';
 
 const Speaker = () => {
   const [audioUrls, setAudioUrls] = useState([]);
@@ -139,10 +140,9 @@ const Speaker = () => {
       const newAudioUrls = [];
 
       const fetchAudio = async (sentence) => {
-        const fetchPromise = fetch(`${ttsApiPath}/generate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: processTextForTTS(sentence).trim() })
+        const fetchPromise = await api.post(`${import.meta.env.VITE_API_URL}/generateAudio`, {
+          text: processTextForTTS(sentence).trim(),
+          path: ttsApiPath
         });
 
         const timeoutPromise = new Promise((_, reject) => 
@@ -156,23 +156,32 @@ const Speaker = () => {
         for (const sentence of sentences) {
           try {
             const response = await fetchAudio(sentence);
-
-            if (!response.ok) {
+      
+            console.log(response);
+      
+            if (response.status !== 200) {
               throw new Error('Network response was not ok');
             }
-
-            const audioBlob = await response.blob();
+      
+            // Convert the arraybuffer into a Blob
+            const audioBlob = new Blob([response.data], { type: 'audio/wav' });
+      
+            // Create an object URL for the Blob
             const audioUrl = URL.createObjectURL(audioBlob);
-
+      
+            // Store the URL for later use
             newAudioUrls.push({ url: audioUrl, text: sentence.trim() });
           } catch (err) {
             setError(`Error: ${err.message}`);
+            console.error(err);
             newAudioUrls.push({ url: "err", text: sentence.trim() });
           }
-
+      
           setAudioUrls([...newAudioUrls]);
         }
       };
+      
+      
 
       getAudioUrls();
     };

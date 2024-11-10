@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import { api } from '/src/utils/api';
 import { useAudioCall } from './AudioCallContext';
 import Display from './Display';

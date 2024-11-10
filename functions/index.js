@@ -674,3 +674,40 @@ exports.getTextFromAudioBatch = functions.https.onRequest(async (req, res) => {
     });
 });
 
+exports.generateAudio = functions.https.onRequest(async (req, res) => {
+    corsHandler(req, res, async () => {
+      try {
+        const { text, path } = req.body;
+  
+        // Validate required fields
+        if (!text || !path) {
+          return res.status(400).json({ error: 'No text provided' });
+        }
+  
+        // Send the request to the external API with only the text field
+        const response = await axios.post(`${path}/generate`, { text }, {
+          headers: { 'Content-Type': 'application/json' },
+          responseType: 'arraybuffer', // To handle binary audio data
+        });
+  
+        // Check if the response is successful
+        if (response.status === 200) {
+          // Set headers for audio file download and return it
+          res.setHeader('Content-Type', 'audio/wav');
+          res.setHeader('Content-Disposition', 'inline; filename="tts.wav"');
+          
+          // Send the audio file as binary data
+          return res.send(response.data);
+        } else {
+          return res.status(response.status).json({ error: 'Failed to generate audio' });
+        }
+  
+      } catch (error) {
+        console.error('Error generating audio:', error);
+        return res.status(500).json({ error: 'An error occurred while generating audio.' });
+      }
+    });
+  });
+  
+
+

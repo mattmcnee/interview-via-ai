@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import template from './assets/template.json';
+import template from '/src/assets/data.json';
 
 const AnswersInput = () => {
   // Use state to handle form data
@@ -22,7 +22,7 @@ const AnswersInput = () => {
     // Create a temporary <a> element to trigger the download
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'answers.json'; // Filename for the download
+    a.download = 'data.json'; // Filename for the download
     document.body.appendChild(a); // Append the element to the DOM
     a.click(); // Trigger the download
     document.body.removeChild(a); // Remove the element from the DOM

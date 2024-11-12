@@ -446,7 +446,7 @@ exports.upsertEmbedding = functions.https.onRequest((req, res) => {
             if (req.method !== VALID_METHOD) return res.status(405).json({ error: `Method not allowed. Allowed methods: ${VALID_METHOD}` });
             if (!authenticateRequest(req, apiKey, VALID_METHOD)) return res.status(401).json({ error: 'Invalid signature' });
 
-            const items = req.body;
+            const items = req.body.data;
             
             if (!Array.isArray(items)) {
                 throw new Error('Request body must be an array of items');

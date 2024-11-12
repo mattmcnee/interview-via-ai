@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import template from './assets/template.json';
+import template from '/src/assets/data.json';
+import { api } from '/src/utils/api';
 
 const EmbeddingTester = () => {
   const [inputText, setInputText] = useState('');
@@ -24,11 +25,15 @@ const EmbeddingTester = () => {
     //     { headers: { 'Content-Type': 'application/json' } }
     //   );
 
-    const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/upsertEmbedding`,
-            template,
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+    const response = await api.post(`${import.meta.env.VITE_API_URL}/upsertEmbedding`, { 
+      data: template
+    });
+
+    // const response = await axios.post(
+    //     `${import.meta.env.VITE_API_URL}/upsertEmbedding`,
+    //         template,
+    //     { headers: { 'Content-Type': 'application/json' } }
+    //   );
       
 
       setEmbeddings(response);

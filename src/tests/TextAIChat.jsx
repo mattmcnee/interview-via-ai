@@ -3,6 +3,7 @@ import { api } from '/src/utils/api';
 import { splitIntoSentences, cleanMessage, getGreeting } from '/src/utils/textProcessing';
 import chatIcon from '/src/assets/chat.svg';
 import closeIcon from '/src/assets/close.svg';
+import HexagonBox from '../components/HexagonBox';
 
 const AIChat = ({ preprompt }) => {
     const [messages, setMessages] = useState([]);
@@ -88,6 +89,11 @@ const AIChat = ({ preprompt }) => {
     }, [messages, loading]);
 
     return (
+        <>
+        <div style={{padding: '50px'}}>
+        <HexagonBox/>
+        </div>
+        
         <div style={{
             position: 'absolute',
             top: 0,
@@ -102,15 +108,20 @@ const AIChat = ({ preprompt }) => {
             zIndex: 1000,
         }}>
             <div style={{ position: 'relative', maxWidth: '400px', pointerEvents: 'initial' }}>
-                {isChatOpen ? (
                     <div style={{
                         margin: '0',
-                        padding: '1rem 0 0 0',
+                        padding: '0',
                         border: '1px solid #ddd',
                         borderRadius: '8px',
                         backgroundColor: '#fff',
                         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexDirection: 'column',
                     }}>
+                        {isChatOpen ? (
+                        <>
                         <img
                             src={closeIcon}
                             alt="Close chat"
@@ -125,7 +136,7 @@ const AIChat = ({ preprompt }) => {
                                 padding: '5px',
                             }}
                         />
-                        <div style={{ height: '300px', maxHeight: '300px', overflowY: 'auto', padding: '20px 10px 0 10px' }}>
+                        <div style={{ height: '300px', maxHeight: '300px', overflowY: 'auto', padding: '20px 10px 0 10px', margin: '1rem 0 0 0' }}>
                             <div style={{ textAlign: 'left', margin: '0.5rem 0', marginRight:'4rem',}}>
                                 <span style={{
                                     display: 'inline-block',
@@ -183,17 +194,19 @@ const AIChat = ({ preprompt }) => {
                                 borderTop: '1px solid #ddd',
                             }}
                         />
-                    </div>
+                    </>
                 ) : (
                     <img
                         src={chatIcon}
                         alt="Open chat"
                         onClick={() => setIsChatOpen(true)}
-                        style={{ cursor: 'pointer', width: '40px', height: '40px' }}
+                        style={{ cursor: 'pointer', width: '40px', height: '40px', margin: '10px' }}
                     />
                 )}
+                </div>
             </div>
         </div>
+        </>
     );
 };
 
